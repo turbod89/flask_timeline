@@ -1,0 +1,47 @@
+{% extends "layouts/layout.html" %}
+{% block body %}
+    <div class="py-5" style="max-width: 420px; margin: auto;">
+        
+        <div class="card border-secondary" id="selfie-card" style="max-width: 420px; margin: auto;padding: 16px;">
+            <video autoplay class="card-img-top border bg-secondary d-none" alt="Card image cap"></video>
+            <canvas class="card-img-top border d-none" alt="Card image cap"></canvas>
+            <img class="card-img-top border" id='profile-img' src="" alt="Card image cap">
+
+            <div class="card-body text-center">
+                <div class="btn-group w-100 pb-2">
+                    <a href="#" id="takeSelfie-btn" class="btn btn-primary w-100">
+                        <i class="fa fa-camera"></i>
+                        <span>Take a Selfie!</span>
+                    </a>
+                </div>
+                <div class="btn-group w-100 pb-2 d-none">
+                    <a href="#" id="reTakeSelfie-btn" class="btn btn-outline-danger w-100">
+                        <i class="fa fa-sync"></i>
+                        <span>Repeat</span>
+                    </a>
+                    <a href="#" id="removeSelfie-btn" class="btn btn-outline-danger">
+                        <i class="fa fa-times"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="text-center mt-4">
+            ... or if you prefer just
+            <a href="#" id="uploadPhoto-btn" class="btn btn-link">Upload Photo</a>
+        </div>
+        <div class="mt-4 w-100 pb-2 d-none">
+            <a href="#" id="updateSelfie-btn" class="btn btn-primary w-100">
+                <i class="fa fa-upload"></i>
+                <span>Update!</span>
+            </a>
+        </div>
+        <div  class ="py-5 text-center">
+            <h4 id="complete-name">First Name + Last Name</h4>
+        </div>
+    </div>
+{% endblock %}
+{% block localJs %}
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
+<script src="{{ url_for('static',filename='js/own_profile.page.js') }}"></script>
+
+{% endblock %}

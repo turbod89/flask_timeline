@@ -1,0 +1,43 @@
+{% from 'macros/navbar.html' import navbar with context %}
+<!doctype html>
+<html lang="en">
+    <head>
+
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <title>APP_NAME</title>
+        <link rel=stylesheet type=text/css href="{{ url_for('static', filename='bootstrap/bootstrap.min.css') }}">
+        {% block localCss %}{% endblock %}
+    </head>
+    <body>
+        {% block navbar -%}
+        {{ navbar() }}
+        {%- endblock %}
+
+        <main role="main" class="container-fluid" style="margin-top: 64px;">
+            <div class ="row">
+                <div class="col-md-12">
+                    {% for message in get_flashed_messages() %}
+                    <div class=flash>{{ message }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class ="row">
+                <div class ="col-md-12">
+                    {% block body %}{% endblock %}
+                </div>
+            </div>
+        </main>
+        
+        {% block globalJs %}
+        <!-- Optional JavaScript -->
+        <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+        <script src="{{ url_for('static', filename='jquery-3.3.1.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='bootstrap/popper.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='bootstrap/bootstrap.min.js') }}"></script>
+        {% endblock %}
+        {% block localJs %}{% endblock %}
+    </body>
+</html>

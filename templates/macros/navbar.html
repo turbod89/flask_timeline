@@ -1,0 +1,51 @@
+{% macro navbar() -%}
+<nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+    <a class="navbar-brand" href="#">APP_NAME</a>
+
+    <button
+        class="navbar-toggler"
+        type="button"
+        data-toggle="collapse"
+        data-target="#navbarCollapse"
+        aria-controls="navbarCollapse"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+    >
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+        <ul class="navbar-nav ml-auto">
+            {% if not session.logged_in %}
+                <li class="nav-item active">
+                    <a href="{{ url_for('auth.login') }}" class ="nav-link">Log in</a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.register') }}" class ="nav-link">Sign up</a>
+                </li>
+                {% else %}
+                <li class="nav-item">
+                    <a href="{{ url_for('main.index') }}" class ="nav-link">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('parties.party', token = 'aoeu') }}" class ="nav-link">Party</a>
+                </li>
+                {% if not g.me.belongsTo('register') %}
+                    {% if g.me.profile %}
+                        <li class="nav-item">
+                            <a href="{{ url_for('profile.own_profile',) }}" class ="nav-link">My profile</a>
+                        </li>
+                    {% endif %}
+                    {% if g.me.belongsTo('admin')%}
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin.main') }}" class = "nav-link">Administration</a>
+                        </li>        
+                    {% endif %}
+                {% endif %}
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.logout') }}" class = "nav-link">Log out</a>
+                </li>
+            {% endif %}
+        </ul>
+    </div>
+</nav>
+{%- endmacro %}

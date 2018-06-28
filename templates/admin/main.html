@@ -1,0 +1,29 @@
+{% extends "layouts/layout.html" %}
+{% block body %}
+    <div class ="card-columns">
+        <div class="card">
+
+                <div class="card-body">
+                    <h5 class="card-title">Users management</h5>
+                    <p class="card-text">This section allow you to adminstrate user's status and configurations.</p>
+                    <a href="{{ url_for('admin.users') }}" class="btn btn-primary">Users</a>
+                </div>
+        </div>
+        <div class="card">
+
+                <div class="card-body">
+                    <h5 class="card-title">Groups management</h5>
+                    <p class="card-text">This section allow you to adminstrate group's status and configurations.</p>
+                    <a href="{{ url_for('admin.groups') }}" class="btn btn-primary">Groups</a>
+                </div>
+        </div>
+    </div>
+    
+{% endblock %}
+
+
+{% block localJs %}
+{% endblock %}
+
+{% block localCss %}
+{% endblock %}

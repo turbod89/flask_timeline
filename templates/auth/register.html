@@ -1,0 +1,101 @@
+{% extends "layouts/layout.html" %} {% block body %}
+<div class="row">
+	<div class="col-12 pt-4">
+		<div class="text-center pt-4 pb-4">
+			<h1 class="h3 mb-3 font-weight-normal">APP_NAME</h1>
+			<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+		</div>
+	</div>
+</div>
+<div class="row">
+	<div class="col-12 col-lg-6">
+		<div class="text-center pt-4 pb-4" style="max-width: 420px;margin: auto;">
+			<h5 class="h3 mb-3 font-weight-normal">Smile!</h5>
+			<p>Despite it's not mandatory, it's highly recommend to use an avatar so users can tell you at a glance!</p>
+
+			<div class="card border-secondary" id="selfie-card" style="max-width: 420px; margin: auto;padding: 16px;">
+				<video autoplay class="card-img-top border bg-secondary" alt="Card image cap"></video>
+				<canvas class="card-img-top border d-none" alt="Card image cap"></canvas>
+
+				<div class="card-body text-center">
+					<div class="btn-group w-100 pb-2">
+						<a href="#" id="takeSelfie-btn" class="btn btn-primary w-100">
+							<i class="fa fa-camera"></i>
+							<span>Take a Selfie!</span>
+						</a>
+					</div>
+					<div class="btn-group w-100 pb-2 d-none">
+						<a href="#" id="reTakeSelfie-btn" class="btn btn-outline-danger w-100">
+							<i class="fa fa-sync"></i>
+							<span>Repeat</span>
+						</a>
+						<a href="#" id="removeSelfie-btn" class="btn btn-outline-danger">
+							<i class="fa fa-times"></i>
+						</a>
+					</div>
+				</div>
+			</div>
+			<div class="text-center mt-4">
+				... or if you prefer just
+				<a href="#" id="uploadPhoto-btn" class="btn btn-link">Upload Photo</a>
+			</div>
+		</div>
+	</div>
+	<div class="col-12 col-lg-6">
+		<div class="text-center pt-4 pb-4" style="max-width: 420px; margin: auto;">
+			<h5 class="h3 mb-3 font-weight-normal">Personal Information</h5>
+			<p>In order of sign up in our app we have to make you some questions... Don't worry! They will be easy!</p>
+		</div>
+		<form class="form-signup" style="max-width: 420px; margin: auto;" method="POST">
+
+			<div class="form-row">
+				<div class="form-group col-12">
+					<label for="inputFirst_name">First Name</label>
+					<input name="first_name" id="inputFirst_name" class="form-control" placeholder="First name" required=""
+					    type="text">
+				</div>
+			</div>
+
+			<div class="form-row">
+				<div class="form-group col-12">
+					<label for="inputlast_name">Last Name</label>
+					<input name="last_name" id="inputLast_name" class="form-control" placeholder="Last name" required="" type="text">
+				</div>
+			</div>
+
+			<div class="form-row">
+				<div class="form-group col-12">
+					<label for="inputEmail">Email address</label>
+					<input name="email" id="inputEmail" class="form-control" placeholder="Email address" required="" type="email">
+				</div>
+			</div>
+
+			<div class="form-row">
+				<div class="form-group col-12">
+					<label for="inputPassword">Password</label>
+					<input name="password" id="inputPassword" class="form-control" placeholder="Password" required="" type="password">
+				</div>
+			</div>
+
+			<div class="form-row">
+				<div class="form-group col-12">
+					<label for="inputRepeatPassword">Repeat Password</label>
+					<input name="repeatPassword" id="inputRepeatPassword" class="form-control" placeholder="Repeat Password" required="" type="password">
+				</div>
+			</div>
+
+			<div class="form-row">
+				<div class="form-group col-12">
+					<button class="btn btn-lg btn-primary btn-block" type="submit">Sign up</button>
+				</div>
+			</div>
+
+			<p class="mt-5 mb-3 text-muted text-center">© 2017-2018</p>
+		</form>
+
+	</div>
+</div>
+{% endblock %} {% block localCss %}
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous"> {% endblock %} {% block localJs %}
+<script src="{{ url_for('static',filename='js/register.page.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,152 @@
+const getCamera = (renderer, scene) => {
+    const fov = 45;
+    const aspect = renderer.domElement.width / renderer.domElement.height;
+    const near = 1;
+    const far = 1000;
+    const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+
+    const R = 40
+    const theta = 0.15 * 2 * Math.PI / 4
+    camera.position.z = R * Math.cos(theta)
+    camera.position.y = -R * Math.sin(theta)
+    camera.lookAt(new THREE.Vector3(0, 0, 0))
+    scene.add(camera)
+    return camera
+}
+
+const getScene = () => {
+    const scene = new THREE.Scene()
+    scene.background = new THREE.Color(0xffffff)
+
+    scene.userData.get = name => scene.children.find( child => child.name === name)
+    scene.userData.add = (e,name) => {
+        scene.userData[name] = e
+        return scene
+    }
+
+    return scene
+}
+
+const getLights = scene => {
+
+    const table = scene.userData.table
+
+    const lights = [
+        new THREE.AmbientLight(0x777777, 0.85),
+        new THREE.PointLight(0xffffff, 0.5, 1000),
+        new THREE.PointLight(0xff0000, 0.5, 100),
+        new THREE.PointLight(0x00ff00, 0.5, 100),
+        new THREE.PointLight(0x0000ff, 0.5, 100),
+    ]
+
+    lights[1].position.set(0, 0, 100)
+    lights[2].position.set(table.mesh.geometry.parameters.width / 2, table.mesh.geometry.parameters.height / 2, 40)
+    lights[3].position.set(-table.mesh.geometry.parameters.width / 2, table.mesh.geometry.parameters.height / 2, 40)
+    lights[4].position.set(table.mesh.geometry.parameters.width / 2, -table.mesh.geometry.parameters.height / 2, 40)
+    lights.forEach(l => scene.add(l))
+    scene.userData.add(lights,'lights')
+    return lights
+}
+
+window.addEventListener('load', event => {
+
+    const socket = io.connect('http://' + document.domain + ':' + location.port + '/party');
+
+    const canvas = document.getElementById('cv1')
+    const touchManager = new TouchManager(canvas)
+    
+    const scene = getScene()
+    
+    const renderer = new THREE.WebGLRenderer({canvas,antialias: true});
+    renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);
+    renderer.setPixelRatio(devicePixelRatio)
+
+    const camera = getCamera(renderer,scene)
+    camera.name = 'SUBJECTIVE_CAMERA'
+    
+    const table = new Table(scene)
+    table.name = "TABLE"
+    scene.add(table.mesh);
+    scene.userData.add(table,"table")
+
+    const lights = getLights(scene)
+    
+    const cardsInGame = new Deck(socket,scene)
+    const userManager = new UserManager(socket,scene)
+    const raycaster = new THREE.Raycaster();
+    scene.userData.add(raycaster,'raycaster')
+
+    const regions = [new Region(scene, 5/8,7/2)]
+    regions.forEach (region => region.update({pos: [0.5,0.5]}))
+    regions.forEach (region => scene.add(region.mesh))
+    scene.userData.add(regions,regions)
+
+    touchManager.addEventListener('update', function (touch) {
+        // calculate mouse position in normalized device coordinates
+        // (-1 to +1) for both components
+
+        const touchPoint = {
+            x: (touch.pos[0] / canvas.width) * 2 - 1,
+            y: -(touch.pos[1] / canvas.height) * 2 + 1,
+        }
+        
+        raycaster.setFromCamera(touchPoint, camera);
+        const intersects = raycaster.intersectObjects([table.mesh]);
+        if (intersects.length > 0) {
+            const point = intersects[0].point
+
+            touch.cards.forEach((card,i) => {
+                i > 0 || card.moveTo(point,table)
+            })
+
+        }
+
+
+    })
+
+    touchManager.addEventListener('add', function (touch) {
+        const point = {
+            x: (touch.pos[0] / canvas.width) * 2 - 1,
+            y: -(touch.pos[1] / canvas.height) * 2 + 1,
+        }
+        raycaster.setFromCamera(point, camera)
+        touch.cards = cardsInGame.intersectCards(raycaster);
+        
+    })
+
+    touchManager.addEventListener('remove', function (touch) {
+        const point = {
+            x: (touch.pos[0] / canvas.width) * 2 - 1,
+            y: -(touch.pos[1] / canvas.height) * 2 + 1,
+        }
+
+        if (touch.cards.length > 0) {
+            raycaster.setFromCamera(point, camera)
+            const intersectedRegions = raycaster.intersectObjects(regions.map(r => r.mesh)).map( i => i.object.region)
+            
+            if (intersectedRegions.length > 0) {
+                const region = intersectedRegions[0]
+
+                touch.cards.forEach( card => {
+                    card.moveTo(region.mesh.position)
+                    card.emitPosition()
+                })
+            } else {
+                touch.cards.forEach(card => {
+                    card.moveTo(card.mesh.position)
+                    card.emitPosition()
+                })
+            }
+        }
+
+
+
+    })
+
+    const animate = function () {
+        requestAnimationFrame(animate);
+        renderer.render(scene, camera);
+    };
+
+    animate();
+});

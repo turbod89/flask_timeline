@@ -1,0 +1,22 @@
+{% extends "layouts/canvas_layout.html" %}
+{% block localCss %}
+<link rel="stylesheet" href="{{ url_for( 'static',filename='css/party.page.css' ) }}">
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
+{% endblock %}
+
+{% block localJs %}
+<script type="text/javascript" src="{{ url_for('static',filename='js/socket.io.min.js') }}"></script>
+<script>
+    const socket = io.connect('http://' + document.domain + ':' + location.port + '/party');
+</script>
+
+<script src="{{ url_for('static',filename='three.min.js') }}"></script>
+<script src="{{ url_for('static',filename='js/party/drawings.js') }}"></script>
+<script src="{{ url_for('static',filename='js/party/drawer.js') }}"></script>
+<script src="{{ url_for('static',filename='js/party/touchManager.js') }}"></script>
+<script src="{{ url_for('static',filename='js/party/userManager.js') }}"></script>
+<script src="{{ url_for('static',filename='js/party/region.class.js') }}"></script>
+<script src="{{ url_for('static',filename='js/party/card.class.js') }}"></script>
+<script src="{{ url_for('static',filename='js/party/table.class.js') }}"></script>
+<script src="{{ url_for('static',filename='js/party/party.page.js') }}"></script>
+{% endblock %}

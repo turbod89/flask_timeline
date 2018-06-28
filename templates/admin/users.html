@@ -1,0 +1,253 @@
+{% extends "layouts/layout.html" %}
+{% block body %}
+    <div class ="row" style="padding-top: 100px;">
+        <div class="col-12 text-center">
+            <h2>Users</h2>
+        </div>
+    </div>
+    <div class ="row">
+        <div class="col-12">
+            <table id='users-tbl' class='table'>
+                <thead>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
+
+
+{% block localCss %}
+<!--
+    <link rel=stylesheet type=text/css href="//cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css">
+-->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.16/css/dataTables.bootstrap4.min.css">
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
+{% endblock %}
+
+{% block localJs %}
+<script src="//cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.16/js/dataTables.bootstrap4.min.js"></script>
+<script src="https://cdn.rawgit.com/turbod89/toDom/master/toDom.js"></script>
+
+<script>
+
+
+
+    $('document').ready(function () {
+        
+        let groups = [];
+
+        const updateUserGroups = (user,groups, success) => {
+
+            $.ajax({
+                url : '/api/auth/setInGroup',
+                dataType: 'json',
+                contentType: "application/json; charset=utf-8",
+                async: true,
+                type: 'POST',
+                data : JSON.stringify({
+                    'userId': user.id,
+                    'groups': groups.map(group => group.name)
+                }),
+                success: success,
+                error: function (data) { console.error(data)}
+            });
+
+        }
+
+        const createTable = groups => users => {
+            $('#users-tbl').DataTable({
+                "data": users,
+                "columns": [
+                    {
+                        "title": "Id",
+                        "data": "id",
+                    },
+                    {
+                        "title": "Email",
+                        "data": "email",
+                    },
+                    {
+                        "title": "Groups",
+                        "data": "groups",
+                    },
+                ],
+                "columnDefs": [
+                    {
+                        "targets": [0],
+                        "visible": false,
+                    },
+                    {
+                        "targets": [2],
+                        "type": "html",
+                        "render": function (data,type,row,meta) {                            
+                            return data.map(group => group.name).reduce((acc,curr) => acc+', '+curr,'')
+                        },
+                        "createdCell": function (td, cellData, rowData, row, col) {
+
+                            const maxLengthDropdown = 16;
+                            const markedGroups = groups.map( group => 0 <= cellData.findIndex( cellGroup => cellGroup.id === group.id ));
+                            const savedMarkedGroups = markedGroups.slice()
+                            const haveMarkedGroupsChanged = markedGroups => {
+
+                                for (let i = 0; i < markedGroups.length; i++) {
+                                    if (markedGroups[i] !== savedMarkedGroups[i]) {
+                                        return true
+                                    }
+                                }
+
+                                return false
+                            }
+                            
+                            const generateButtonText = () => {
+                                selectedGroups = [];
+                                markedGroups.forEach((mg,i) => {
+                                    if (mg) {
+                                        selectedGroups.push(groups[i].name)
+                                    }
+                                })
+                                const text = selectedGroups.join(', ')
+                                if (text.length > maxLengthDropdown) {
+                                    return text.substr(0,maxLengthDropdown-3)+'...'
+                                }
+                                return text
+                            }
+
+                    
+                            const dropdownButton = toDom(['button',generateButtonText(),{'class':"btn btn-secondary dropdown-toggle", 'type':"button", 'data-toggle':"dropdown", 'aria-haspopup':"true", 'aria-expanded':"false"}])
+                            const refreshDropdownButton = () => {
+                                const children = dropdownButton.childNodes
+                                for (let i=0; i< children.length; i++) {
+                                    dropdownButton.removeChild(children[i])
+                                }
+                                toDom(generateButtonText(),{at:dropdownButton})
+                            }
+                            
+
+                            const refreshButton = toDom(['button',{'type':'button','class':'btn btn-secondary disabled'},
+                                ['i',{'class': 'fa fa-sync'}],
+                                function $click(event) {
+                                    if (this.classList.contains('disabled')) {
+                                        return
+                                    }
+                                    
+                                    newGroups = []
+                                    markedGroups.forEach( (mg,i) => {
+                                        if (mg) {
+                                            newGroups.push(groups[i])
+                                        }
+                                    })
+                                    
+                                    const btn = this;
+                                    btn.classList.remove('disabled')
+
+                                    updateUserGroups(rowData,newGroups, function (data) {
+                                        btn.classList.add('disabled')
+                                        for (let i = 0; i < markedGroups.length; i++) {
+                                            savedMarkedGroups[i] = markedGroups[i]
+                                        }
+                                    })
+                                    
+                                }
+                            ]);
+
+                            const dropdown = toDom(['div',{'class':'dropdown btn-group'},
+                                dropdownButton,
+                                ['div',{'class':'dropdown-menu'},
+                                    ['form',{'class':'px-4 py-3'},
+                                        [(group,i) => {
+                                            
+                                            const id = 'dropdownCheck-'+rowData.id+'-'+group.id
+                                            const checkboxAttributes = {'value': i,'type':'checkbox','class':'form-check-input','id': id}
+
+                                            if ( markedGroups[i]) {
+                                                checkboxAttributes['checked'] = true
+                                            }
+
+                                            return ['div',{'class':'form-check'},
+                                                    [
+                                                        ['input',checkboxAttributes,
+                                                            function $click(event) {
+                                                            },
+                                                            function $change(event) {
+
+                                                                markedGroups[this.value] = this.checked
+                                                                refreshDropdownButton()
+
+                                                                if (haveMarkedGroupsChanged(markedGroups)) {
+                                                                    refreshButton.classList.remove('disabled')
+                                                                } else {
+                                                                    refreshButton.classList.add('disabled')
+                                                                }
+                                                            },
+                                                        ],
+                                                        ['label',group.name,{'class': 'form-check-label','for':id}],
+                                                        
+                                                    ]
+                                                ]
+                                            
+                                        }, groups],
+                                    ]
+                                ],
+
+                            ])
+
+
+                            td.innerHTML = '';
+                            toDom(['div', {'class': 'btn-group', 'role': 'group'},
+                                dropdown,
+                                refreshButton,
+                            ],{at:td})
+                        },
+                    
+                    },
+                ],
+                
+
+            })
+
+            $('#users-tbl tbody tr').click(function () {
+
+            }); 
+            
+        };
+
+        const getUsers = () => {
+
+            $.ajax({
+                url : '/api/admin/users',
+                dataType: 'json',
+                async: true,
+                type: 'GET',
+                data : {},
+                success: createTable(groups),
+                error: function (data) { console.error(data)}
+            });
+
+        }
+
+
+        const getGroups = () => {
+
+            $.ajax({
+                url : '/api/admin/groups',
+                dataType: 'json',
+                async: true,
+                type: 'GET',
+                data : {},
+                success: function (data) {
+                    groups = data;
+                    getUsers();
+                },
+                error: function (data) { console.error(data)}
+            });
+
+        }
+
+        getGroups();
+
+    });
+
+</script>
+{% endblock %}

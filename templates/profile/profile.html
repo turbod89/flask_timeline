@@ -1,0 +1,35 @@
+{% extends "layouts/layout.html" %}
+{% block body %}
+    <div class="py-5" style="max-width: 420px; margin: auto;">
+
+        <div class="card border-secondary" id="selfie-card" style="max-width: 420px; margin: auto;padding: 16px;">
+            <img class="card-img-top border" id='profile-img' src="" alt="Card image cap">
+        </div>
+        <div  class ="py-5 text-center">
+            <h4 id="complete-name">First Name + Last Name</h4>
+        </div>
+    </div>
+{% endblock %}
+{% block localJs %}
+<script>
+    $(document).ready(function (event) {
+        
+        $.ajax({
+            url: "/api/profile/{{user.id}}",
+            type: 'GET',
+            contentType: "application/json; charset=utf-8",
+            async: true,
+            success: function (data) {
+                console.log(data);
+                document.getElementById('profile-img').src = data.profile.avatar
+                document.getElementById('complete-name').innerHTML = data.profile.first_name + ' ' + data.profile.last_name
+
+                
+            },
+            error: function (data) {
+                console.error(data)
+            }
+        });            
+    })
+</script>
+{% endblock %}

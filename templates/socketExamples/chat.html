@@ -23,6 +23,20 @@
 -->
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.16/css/dataTables.bootstrap4.min.css">
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
+<style>
+    .response-paragraph div,
+    .question-paragraph div {
+        display: inline-block;
+        border-radius: 0.5em;
+    }
+    .response-paragraph  div {
+        background-color: lightgray;
+    }
+
+    .question-paragraph div {
+        background-color: lightcyan;
+    }
+</style>
 {% endblock %}
 
 {% block localJs %}
@@ -180,14 +194,14 @@
 
         connUser.addLineFrom = (email,line) => {
             if (email === connUser.email) {
-                toDom(['p',{'class':''},line],{at:chatDiv})
+                toDom(['p',{'class':'response-paragraph mr-5 p-2'},['div',{'class':'p-2'},line]],{at:chatDiv})
                 
                 if (connUser.display.panel.classList.contains('d-none')) {
                     connUser.setUnreadedMessages('add')
                 }
             
             } else {
-                toDom(['p',{'class':'text-right text-primary'},line],{at:chatDiv})
+                toDom(['p',{'class':'text-right text-primary question-paragraph ml-5 p-2'},['div',{'class':'p-2'},line]],{at:chatDiv})
             }
         }
 

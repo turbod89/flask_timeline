@@ -81,5 +81,17 @@ class Configuration():
         self.HTTPS_REQUIRED = False
 
         self.UPLOADED_FILES_DEST = '/var/uploads'
+
+        self.MAIL_SERVER = 'smtp.gmail.com'
+        self.MAIL_PORT = 587
+        self.MAIL_USERNAME = None
+        self.MAIL_PASSWORD = None
+        self.MAIL_USE_TLS = True
+        self.MAIL_USE_SSL = False
+        #self.MAIL_DEBUG = app.debug
+        self.MAIL_DEFAULT_SENDER = None
+        self.MAIL_MAX_EMAILS = None
+        #self.MAIL_SUPPRESS_SEND = app.testing
+        self.MAIL_ASCII_ATTACHMENTS = False
         
         self.CONFIGURATION_NAME = config

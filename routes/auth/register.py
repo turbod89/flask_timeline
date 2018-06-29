@@ -1,9 +1,16 @@
-from flask import Blueprint, flash, g, redirect, render_template, request, session, url_for, jsonify
+from flask import Blueprint, flash, g, redirect, render_template, request, session, url_for, jsonify, current_app
 from werkzeug.security import check_password_hash, generate_password_hash
+
+from flask_mail import Message,Mail
 
 from ... import models
 
 def append(bp,bp_api):
+
+    def sendActivationEmail(user):
+        msg = Message('Activate your account',sender=current_app.config.get('MAIL_DEFAULT_SENDER'),recipients=[user.email])
+        msg.html = "Follow this <a href=\"%s\">link</a> to activate your account" % url_for('auth.activateAccount', token=user.activation_code)
+        Mail().send(msg)
 
     def logic():
         email = request.form['email'] if 'email' in request.form else None
@@ -39,6 +46,8 @@ def append(bp,bp_api):
             session.clear()
             session['user_id'] = user.id
             session['logged_in'] = True
+
+            #sendActivationEmail(user)
 
         return error
 

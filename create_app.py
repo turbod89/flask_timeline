@@ -2,9 +2,10 @@ import os
 from flask import Flask, g
 
 from .config import Configuration
-from . import models, routes, socketio
+from . import models, routes, socketio, commands
 
 from flask_sslify import SSLify
+from flask_mail import Mail, Message
 
 def create_app(config_name):
     print('create_app.py create_app(config_name)')
@@ -24,5 +25,8 @@ def create_app(config_name):
     models.init_app(app)
     routes.init_app(app)
     socketio.init_app(app)
+    commands.init_app(app)
+
+    mail=Mail(app)
 
     return app

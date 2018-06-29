@@ -5,7 +5,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from .. import models
 
-from . import register,login,logout,setInGroup
+from . import register,login,logout, activateAccount, setInGroup
 
 #from libgravatar import Gravatar
 
@@ -17,8 +17,10 @@ def load_logged_in_user():
 
     if user_id is None:
         g.me = None
+        session['logged_in'] = False
     else:
         g.me = models.auth.User.query.filter_by(id = user_id).first()
+        session['logged_in'] = g.me is not None
         #g.gravatar = Gravatar(g.me.email)
 
 def login_required(view):
@@ -62,4 +64,5 @@ def notin_group_required(groupName):
 register.append(bp,bp_api)
 login.append(bp,bp_api)
 logout.append(bp,bp_api)
+activateAccount.append(bp,bp_api)
 setInGroup.append(bp,bp_api)

@@ -98,6 +98,7 @@ $(document).ready(function (event) {
     let currentStream = null
     const stopTracks = stream => (stream === null) || stream.getTracks().forEach(track => track.stop())
     let havePhoto = false
+    let havePhotoFrom = null
     const re_validEmail = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
     const signUpFormMetadata = {
         'inputFirst_name': {
@@ -161,6 +162,7 @@ $(document).ready(function (event) {
                 canvas.width = img.width
                 context.drawImage(img, 0, 0)
                 havePhoto = true
+                havePhotoFrom = 'file'
                 stopTracks(currentStream)
                 video.classList.add('d-none')
                 canvas.classList.remove('d-none')
@@ -245,6 +247,7 @@ $(document).ready(function (event) {
                         startStream(constraints).then(stream => currentStream = stream)
                     } else {
                         havePhoto = true
+                        havePhotoFrom = 'cam'
                         canvas.height = video.videoHeight
                         canvas.width = video.videoWidth
                         context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight)
@@ -262,6 +265,7 @@ $(document).ready(function (event) {
 
                 reTakeSelfieBtn.addEventListener('click', event => {
                     havePhoto = false
+                    havePhotoFrom = null
                     startStream(constraints).then(stream => currentStream = stream)
 
                     video.classList.remove('d-none')
@@ -275,6 +279,7 @@ $(document).ready(function (event) {
                 removeSelfieBtn.addEventListener('click', event => {
                     currentStream = null
                     havePhoto = false
+                    havePhotoFrom = null
 
                     video.classList.remove('d-none')
                     canvas.classList.add('d-none')
@@ -307,7 +312,7 @@ $(document).ready(function (event) {
         let sendResizedImageData = () => {}
         let sendImageData = () => {}
 
-        if (havePhoto) {
+        if (havePhoto && havePhotoFrom == 'cam') {
             // 2
             const smallSize = 64
             const minDimension = Math.min(canvas.width, canvas.height)
@@ -360,6 +365,36 @@ $(document).ready(function (event) {
                     }
                 });
             }
+        } else if (havePhoto && havePhotoFrom === 'file' && selfieInput.files.length > 0) {
+
+            const file = selfieInput.files[0]
+            const reader = new FileReader();
+            reader.onload = function () {
+                sendResizedImageData = () => {
+                    $.ajax({
+                        url: "/api/profile/avatar",
+                        type: 'POST',
+                        dataType: 'json',
+                        contentType: "application/json; charset=utf-8",
+                        async: true,
+                        data: JSON.stringify({
+                            image: reader.result
+                        }),
+                        success: function (data) {
+                            console.log(data);
+                            window.location.replace('/')
+                        },
+                        error: function (data) {
+                            console.error(data)
+                            window.location.replace('/')
+                        }
+                    });
+                }
+            };
+            reader.onerror = function (error) {
+                console.log('Error: ', error);
+            };
+            reader.readAsDataURL(file);
         }
 
         $.ajax({

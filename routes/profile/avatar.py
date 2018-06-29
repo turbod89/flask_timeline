@@ -49,33 +49,7 @@ def append(bp,bp_api):
         if data['image'] is None:
             return jsonify({'errors': [{'description': '\'image\' field not provided'}]})
 
-        filename = 'avatar_'+str(g.me.id)+'_'+str(math.floor(1000*time.time()))
-        m = hashlib.md5()
-        m.update(str(math.floor(1000*time.time())).encode('utf-8'))
-        token = m.hexdigest()
-        file_descriptor, file_mime = models.main.Image.save_from_urlData( data['image'],filename, max_width=512,max_height=512)
-
-        img = PIL_Image.open(file_descriptor)
-        w,h = img.size
-
-        print ('%s %s has width = %i and height = %i' % (file_descriptor, file_mime,w,h,))
-
-        # if exists, replace previous avatar
-        oldAvatar = g.me.profile.avatar
-        if oldAvatar is not None:
-            oldAvatar.profile = None
-
-        avatar = models.profile.Avatar(
-            file_descriptor = file_descriptor,
-            file_mime = file_mime,
-            token = token,
-            profile = g.me.profile
-        )
-
-        print(avatar)
-
-        models.db.session.add(avatar)
-        models.db.session.commit()
+        models.profile.setAvatarImageFromUrlData(g.me,data['image'])
 
         return jsonify({'errors':[]})
         

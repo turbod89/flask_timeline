@@ -6,11 +6,12 @@ const getCamera = (renderer, scene) => {
     const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 
     const R = 40
-    const theta = 0.15 * 2 * Math.PI / 4
+    const theta = 0.5 * 2 * Math.PI / 4
     camera.position.z = R * Math.cos(theta)
     camera.position.y = -R * Math.sin(theta)
     camera.lookAt(new THREE.Vector3(0, 0, 0))
     scene.add(camera)
+    camera.updateProjectionMatrix()
     return camera
 }
 
@@ -80,6 +81,26 @@ window.addEventListener('load', event => {
     regions.forEach (region => region.update({pos: [0.5,0.5]}))
     regions.forEach (region => scene.add(region.mesh))
     scene.userData.add(regions,regions)
+
+    raycaster.setFromCamera({x: 1,y:1},camera)
+    raycaster.ray.origin.copy((new THREE.Vector3(1,1,-1)).unproject(camera))
+    console.log(raycaster.ray)
+    const plane = new THREE.Plane(new THREE.Vector3(0,0,1),0)
+    const topLeft = raycaster.ray.intersectPlane(plane)
+    console.log(topLeft)
+
+    const cube = new THREE.Mesh(
+        new THREE.BoxGeometry(0.5,0.5,0.5),
+        new THREE.MeshPhongMaterial({
+            color: 0xff0000,
+        })
+    )
+
+
+    cube.position.set(-1,-1,-10).unproject(camera)
+    //console.log(cube.position.copy(topLeft))
+
+    scene.add(cube)
 
     touchManager.addEventListener('update', function (touch) {
         // calculate mouse position in normalized device coordinates

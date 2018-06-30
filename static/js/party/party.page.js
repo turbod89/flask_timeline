@@ -6,18 +6,21 @@ const getCamera = (renderer, scene) => {
     const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 
     const R = 40
-    const theta = 0.5 * 2 * Math.PI / 4
+    const theta = 0.05 * 2 * Math.PI / 4
     camera.position.z = R * Math.cos(theta)
     camera.position.y = -R * Math.sin(theta)
     camera.lookAt(new THREE.Vector3(0, 0, 0))
     scene.add(camera)
     camera.updateProjectionMatrix()
+
+    //camera.userData.controls = new THREE.OrbitControls(camera)
+    //camera.userData.controls.update();
     return camera
 }
 
 const getScene = () => {
     const scene = new THREE.Scene()
-    scene.background = new THREE.Color(0xffffff)
+    scene.background = new THREE.Color(0x000000)
 
     scene.userData.get = name => scene.children.find( child => child.name === name)
     scene.userData.add = (e,name) => {
@@ -25,26 +28,44 @@ const getScene = () => {
         return scene
     }
 
+    const clock = new THREE.Clock()
+    scene.userData.add(clock,'clock')
+
     return scene
 }
 
 const getLights = scene => {
 
     const table = scene.userData.table
+    const t_w = table.mesh.geometry.parameters.width
+    const t_h = table.mesh.geometry.parameters.height
 
-    const lights = [
-        new THREE.AmbientLight(0x777777, 0.85),
-        new THREE.PointLight(0xffffff, 0.5, 1000),
-        new THREE.PointLight(0xff0000, 0.5, 100),
-        new THREE.PointLight(0x00ff00, 0.5, 100),
-        new THREE.PointLight(0x0000ff, 0.5, 100),
+    const LightSystem = function () {
+        this.clock = new THREE.Clock()
+        this.render = function () {
+            const t = this.clock.getElapsedTime()
+            this.forEach (ls => ls.render(t))
+        }
+    }
+
+    LightSystem.prototype = Object.create(Array.prototype)
+
+    const lights = new LightSystem()
+    
+    const definitions = [
+        {
+            l: new THREE.AmbientLight(0xffffff, 0.5,100),
+            p: l => t => {l.position.set(0,0,t_h/2)},
+        },
     ]
+    
+    definitions.forEach (o => lights.push({
+        light: o.l,
+        render: o.p(o.l),
+    }))
 
-    lights[1].position.set(0, 0, 100)
-    lights[2].position.set(table.mesh.geometry.parameters.width / 2, table.mesh.geometry.parameters.height / 2, 40)
-    lights[3].position.set(-table.mesh.geometry.parameters.width / 2, table.mesh.geometry.parameters.height / 2, 40)
-    lights[4].position.set(table.mesh.geometry.parameters.width / 2, -table.mesh.geometry.parameters.height / 2, 40)
-    lights.forEach(l => scene.add(l))
+    lights.forEach( sl => scene.add(sl.light))
+
     scene.userData.add(lights,'lights')
     return lights
 }
@@ -166,6 +187,9 @@ window.addEventListener('load', event => {
 
     const animate = function () {
         requestAnimationFrame(animate);
+        //camera.userData.controls.update();
+        lights.render()
+        table.render()
         renderer.render(scene, camera);
     };
 

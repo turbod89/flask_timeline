@@ -68,4 +68,4 @@ def setAvatarImageFromUrlData(user, imageData):
     db.session.commit()
 
 def init_app(app,db):
-    print('models/profile/__init__.py init_app(app)')
+    pass

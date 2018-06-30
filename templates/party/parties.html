@@ -1,0 +1,214 @@
+{% extends "layouts/layout.html" %}
+{% block body %}
+    <div class ="row" style="padding-top: 100px;">
+        <div class="col-12 text-center">
+            <h2>Open parties</h2>
+        </div>
+    </div>
+    <div class ="row">
+        <div class="col-12">
+            <table id='open-parties-tbl' class='table'>
+                <thead></thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <div class="alert alert-info" role="alert">
+                                Loading...
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
+
+
+{% block localCss %}
+<!--
+    <link rel=stylesheet type=text/css href="//cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css">
+-->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.16/css/dataTables.bootstrap4.min.css">
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
+{% endblock %}
+
+{% block localJs %}
+<script src="//cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.16/js/dataTables.bootstrap4.min.js"></script>
+<script src="https://cdn.rawgit.com/turbod89/toDom/master/toDom.js"></script>
+
+<script>
+
+
+    const dataAddGroupParser = data => {
+
+        /*
+            string to short
+        */
+        [
+            'name',
+        ].forEach( fieldname => {
+
+            
+            if (data[fieldname].trim().length < 2) {
+                return {
+                    code: 1,
+                    value: fieldname,
+                }
+            } else {
+                data[fieldname] = data[fieldname].trim()
+            }
+        })
+
+        return {code: 0, data: data}
+    }
+
+    const createTable = getParties => {
+
+        $('#open-parties-tbl').DataTable({
+            "data": [],
+            "columns": [
+                {
+                    "title": "Name",
+                    "data": "name",
+                },
+                { "title": "Status", "data": "status", },
+                { "title": "Users", "data": "participats", },
+                {
+                    "title": "Actions",
+                    "data": "id",
+                },
+            ],
+            "columnDefs": [
+                {
+                    "targets": [],
+                    "visible": false,
+                },
+                {
+                    "targets": [1],
+                    "render": function (data,type,row,meta) {
+                        return data
+                    },
+                    "createdCell": function(td,cellData,rowData,row,col) {
+
+                    },
+                },
+                {
+                    "targets": [2],
+                    "render": function (data,type,row,meta) {
+                        return data.map(ud => ud.email).reduce( (prev,curr) => prev + ', ' + curr)
+                    },
+                    "createdCell": function(td,cellData,rowData,row,col) {
+                        td.innerHTML = ''
+                        toDom([
+                            (ud,i) => ['img', {
+                                'src': '/profile/avatar/'+ud.id,
+                                'width': 64,
+                                'height': 64,
+                                'class': "img-thumbnail float-right",
+                                'data-toggle': 'tooltip',
+                                'data-placement': 'bottom',
+                                'title': ud.first_name + ' ' + ud.last_name,
+                            }],
+                            cellData,
+                        ],{at:td})
+                    },
+                },
+                {
+                    "targets": [3],
+                    "render": function (data,type,row,meta) {
+                        return "";
+                    },
+                    "createdCell": function(td,cellData,rowData,row,col) {
+
+                        if (rowData.status === 'created') {
+                            toDom(['button',{'class': 'btn btn-outline-primary'}, 
+                                ['i',{'class':'fa fa-plus-square'}],
+                                function $click (event) {
+                                    
+                                    $.ajax({
+                                        url : '/api/admin/group',
+                                        type: 'DELETE',
+                                        dataType: 'json',
+                                        contentType: "application/json; charset=utf-8",
+                                        async: true,
+                                        data : JSON.stringify({groupId: rowData.id}),
+                                        success: function (data) { console.error(data); getParties();},
+                                        error: function (data) { console.error(data)}
+                                    });
+                                }
+                            ],{at:td})
+                        } else if (rowData.status === 'started') {
+                            toDom(['a',{'class': 'btn btn-outline-primary',href: rowData.url}, 
+                                ['i',{'class':'fa fa-eye'}],
+                                
+                            ],{at:td})
+                        }
+                    },
+                },
+            ],
+            
+
+        });
+
+    }
+
+
+    const refreshTable = data => {
+        const table = $('#open-parties-tbl').DataTable();
+        table.clear()
+        table.rows.add(data)
+        table.draw();
+    }
+
+    const getParties = () => {
+
+        $.ajax({
+            url : '/api/parties/',
+            dataType: 'json',
+            async: true,
+            type: 'GET',
+            data : {},
+            success: refreshTable,
+            error: function (data) { console.error(data)}
+        });
+
+    }
+
+
+    $('document').ready(function () {
+
+
+        $('button#btnAddGroup').click(function (event) {
+            event.preventDefault();
+            
+            let data = {
+                name: $('input#inputName').val(),
+                description: $('input#inputDescription').val(),
+            }
+            
+            const error = dataAddGroupParser(data);
+            if ( error.code != 0) {
+                return
+            }
+            
+            $.ajax({
+                url : '/api/admin/group',
+                dataType: 'json',
+                contentType: "application/json; charset=utf-8",
+                async: true,
+                type: 'POST',
+                data : JSON.stringify(error.data),
+                success: function (data) { console.error(data); getParties()},
+                error: function (data) { console.error(data)}
+            });
+            
+        });
+        
+        const table = createTable(getParties)
+        getParties();
+
+    });
+
+</script>
+{% endblock %}

@@ -9,6 +9,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from PIL import Image as PIL_Image
 import os
+import random
 
 
 
@@ -45,6 +46,7 @@ def generate(app,db):
             'email': 'acameron@example.com',
             'password': 'abc123',
             'groups': ['active'],
+            'avatar': 'data/allison-cameron.png'
         },
         {
             'first_name': 'Eric',
@@ -52,6 +54,7 @@ def generate(app,db):
             'email': 'eforeman@example.com',
             'password': 'abc123',
             'groups': ['active'],
+            'avatar': 'data/eric_foreman.jpg',
         },
         {
             'first_name': 'Rober',
@@ -59,6 +62,7 @@ def generate(app,db):
             'email': 'rchase@example.com',
             'password': 'abc123',
             'groups': ['active'],
+            'avatar': 'data/rober_chase.jpg'
         },
     ]
 
@@ -90,6 +94,26 @@ def generate(app,db):
             user.groups.append(group)
     
     db.session.commit()
+
+    users = models.auth.User.query.all()
+    for i in range(0,random.randint(8,12)):
+        party = models.party.Party()
+        num_players = random.randint(2,4)
+        status = 'created' if random.random() > 0.3 else (
+            'started' if random.random() > 0.3 else 'finished')
+        players = random.sample(users,num_players)
+        owner = random.sample(players,1)[0]
+        name  = '%s\'s party #%i' % (owner.profile.first_name, i+1)
+
+        party.status = status
+        party.participants = players
+        party.owner = owner
+        party.name = name
+
+        db.session.add(party)
+    db.session.commit()
+
+
 
 def init_app(app,db):
 

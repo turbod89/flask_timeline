@@ -96,7 +96,7 @@ def generate(app,db):
     db.session.commit()
 
     users = models.auth.User.query.all()
-    for i in range(0,random.randint(8,12)):
+    for i in range(0,12):
         party = models.party.Party()
         num_players = random.randint(2,4)
         status = 'created' if random.random() > 0.3 else (

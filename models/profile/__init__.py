@@ -16,7 +16,9 @@ def setAvatarImage(user, image):
     m = hashlib.md5()
     m.update(str(math.floor(1000*time.time())).encode('utf-8'))
     token = m.hexdigest()
-    file_descriptor, file_mime = Image.save( image,filename, max_width=512,max_height=512)
+    croped_image = image.crop((0,0,min(image.size),min(image.size)))
+    
+    file_descriptor, file_mime = Image.save( croped_image,filename, max_width=512,max_height=512)
 
     img = PIL_Image.open(file_descriptor)
     w,h = img.size

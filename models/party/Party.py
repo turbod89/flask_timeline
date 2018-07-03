@@ -40,6 +40,7 @@ class Party(Base):
         obj['code'] = self.code
         obj['status'] = self.status
         obj['password'] = self.password
+        obj['owner'] = { key: self.owner.serialize()[key] for key in ('id','email','first_name','last_name') }
         obj['participats'] = [ { key: participant.serialize()[key] for key in ('id','email','first_name','last_name') } for participant in self.participants]
 
         return obj

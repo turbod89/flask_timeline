@@ -103,9 +103,9 @@
                         toDom([
                             (ud,i) => ['img', {
                                 'src': '/profile/avatar/'+ud.id,
-                                'width': 64,
-                                'height': 64,
-                                'class': "img-thumbnail float-right",
+                                'width': 48,
+                                'height': 48,
+                                'class': "rounded-circle img-thumbnail float-right" + (ud.id === rowData.owner.id ? ' border-primary' : ''),
                                 'data-toggle': 'tooltip',
                                 'data-placement': 'bottom',
                                 'title': ud.first_name + ' ' + ud.last_name,

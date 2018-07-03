@@ -49,7 +49,9 @@ class Image(Base):
 
         if file_mime == 'PNG':
             file_descriptor = file_descriptor + '.png'
-        elif file_mime == 'JPEG':
+        elif file_mime in ('JPEG', None,):
+            image = image.convert('RGB')
+            file_mime = 'JPEG'
             file_descriptor = file_descriptor + '.jpg'
                 
 
@@ -92,10 +94,11 @@ class Image(Base):
 
         if file_mime == 'PNG':
             image.save(file_descriptor)
-        elif file_mime == 'JPEG':
+        elif file_mime in ('JPEG', None,):
             image.save(file_descriptor, optimize=True, quality=95)
         else:
             print('File mimetype = %s unknown' % (file_mime,))
+            return None, None
 
         return file_descriptor, file_mime
 

@@ -6,6 +6,16 @@
         </div>
     </div>
     <div class ="row">
+        <div class="col-12 text-center">
+            <p><a class="" href="{{ url_for('parties.create_party') }}">Create party</a> or join to one of the following open parties:</p>
+        </div>
+    </div>
+    <div class ="row" style="padding-top: 100px;">
+        <div class="col-12 text-center">
+            <h2>Open parties</h2>
+        </div>
+    </div>
+    <div class ="row">
         <div class="col-12">
             <table id='open-parties-tbl' class='table'>
                 <thead></thead>
@@ -121,19 +131,29 @@
                     },
                     "createdCell": function(td,cellData,rowData,row,col) {
 
-                        if (rowData.status === 'created') {
+                        //const participant_index = rowData.participants.findIndex(p => p.id == )
+
+                        if (rowData.status === 'created' ) {
                             toDom(['button',{'class': 'btn btn-outline-primary'}, 
                                 ['i',{'class':'fa fa-plus-square'}],
                                 function $click (event) {
                                     
                                     $.ajax({
-                                        url : '/api/admin/group',
-                                        type: 'DELETE',
+                                        url : '/api/parties/join/'+rowData.code,
+                                        type: 'GEt',
                                         dataType: 'json',
                                         contentType: "application/json; charset=utf-8",
                                         async: true,
                                         data : JSON.stringify({groupId: rowData.id}),
-                                        success: function (data) { console.error(data); getParties();},
+                                        success: function (response) {
+                                            
+                                            if (response.errors && response.errors.length === 0) {
+                                                console.log(response.data)
+                                                $('#open-parties-tbl').DataTable().rows(row).data(response.data).draw()
+                                            } else {
+                                                console.log(response)
+                                            }
+                                        },
                                         error: function (data) { console.error(data)}
                                     });
                                 }

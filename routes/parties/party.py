@@ -24,18 +24,69 @@ def append(bp,bp_api):
     def parties():
         return render_template('party/parties.html', me=g.me)
 
-    @bp_api.route('/', methods=('GET',))
+    @bp_api.route('/', methods=('GET','POST',))
     @auth.login_required
     @auth.group_required('active')
     @auth.notin_group_required('blocked')
     def api_parties():
-        parties = models.party.Party.query.filter(models.party.Party.status.in_(('created','started',))).all()
-        parties_json = [party.serialize() for party in parties]
 
-        for party_dict in parties_json:
-            party_dict['url'] = url_for('parties.party',token = party_dict['code'])
+        if request.method == 'GET':
+            parties = models.party.Party.query.filter(models.party.Party.status.in_(('created','started',))).all()
+            parties_json = [party.serialize() for party in parties]
+
+            for party_dict in parties_json:
+                party_dict['url'] = url_for('parties.party',token = party_dict['code'])
+            
+            return jsonify(parties_json)
+
+
+        elif request.method == 'POST':
+            name = request.form['name'] if 'name' in request.form else None
+            error = None
+
+            if request.is_json:
+                data = request.get_json()
+                name = data['name'] or name
+
+            if error is None:
+                party = models.party.Party(name=name,status='created')
+                party.owner = g.me
+                party.participants = [g.me]
+                models.db.session.add(party)
+                models.db.session.commit()
+            
+            return jsonify(party.serialize())
+
+    @bp_api.route('/join/<string:token>', methods=('GET',))
+    @auth.login_required
+    @auth.group_required('active')
+    @auth.notin_group_required('blocked')
+    def api_party_join(token):
+
+        party = models.party.Party.query.filter_by(code=token).first()
         
-        return jsonify(parties_json)
+        if party is None:
+            return jsonify({ 'errors': [{'description': 'No party was found'}], 'data': []})
+        
+        party_serialized = party.serialize()
+        
+        if party.status != 'created':
+            return jsonify({ 'errors': [{'description': 'Party was already started'}], 'data': party_serialized})
+        
+        if len(party.participants) >= 4:
+            return jsonify({ 'errors': [{'description': 'Party already has the maximum allowed participants'}], 'data': party_serialized})
+        
+        user = next( (user for user in party.participants if user.id == g.me.id), None)
+
+        if user is not None:
+            return jsonify({ 'errors': [{'description': 'Already in'}], 'data': party_serialized})
+
+        party.participants.append(g.me)
+        models.db.session.commit()
+        party_serialized = party.serialize()
+
+
+        return jsonify({ 'errors': [], 'data': party_serialized})
 
     @bp.route('/create', methods=('GET',))
     @auth.login_required
@@ -43,6 +94,4 @@ def append(bp,bp_api):
     @auth.notin_group_required('blocked')
     def create_party():
         return render_template('party/create.html', me=g.me)
-
-
     

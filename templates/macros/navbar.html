@@ -30,7 +30,7 @@
                     <a href="{{ url_for('sockets.chat') }}" class ="nav-link">Chat</a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ url_for('parties.party', token = 'aoeu') }}" class ="nav-link">Party</a>
+                    <a href="{{ url_for('parties.parties', token = 'aoeu') }}" class ="nav-link">Party</a>
                 </li>
                 {% if not g.me.belongsTo('register') %}
                     {% if g.me.profile %}

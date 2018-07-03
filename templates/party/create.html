@@ -1,0 +1,33 @@
+{% extends "layouts/layout.html" %} {% block body %}
+
+<div class="row">
+	
+	<div class="col-12 col-lg-6">
+		<div class="text-center pt-4 pb-4" style="max-width: 420px; margin: auto;">
+			<h5 class="h3 mb-3 font-weight-normal">New Party</h5>
+			<p>Create your own party or <a href="{{ url_for('parties.parties') }}">join to a created one</a></p>
+		</div>
+		<form class="form-create-party" style="max-width: 420px; margin: auto;" method="POST">
+
+			<div class="form-row">
+				<div class="form-group col-12">
+					<label for="inputParty_name">Party Name</label>
+					<input name="party_name" id="inputParty_name" class="form-control" placeholder="{{ g.me.profile.first_name }}'s party" required=""
+					    type="text">
+				</div>
+			</div>
+
+			<div class="form-row">
+				<div class="form-group col-12">
+					<button class="btn btn-lg btn-primary btn-block" type="submit">Create</button>
+				</div>
+			</div>
+
+		</form>
+
+	</div>
+</div>
+{% endblock %} {% block localCss %}
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous"> {% endblock %} {% block localJs %}
+<script src="{{ url_for('static',filename='js/parties/create.page.js') }}"></script>
+{% endblock %}

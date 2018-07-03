@@ -23,8 +23,6 @@ def setAvatarImage(user, image):
     img = PIL_Image.open(file_descriptor)
     w,h = img.size
 
-    #print ('%s %s has width = %i and height = %i' % (file_descriptor, file_mime,w,h,))
-
     # if exists, replace previous avatar
     oldAvatar = user.profile.avatar
     if oldAvatar is not None:

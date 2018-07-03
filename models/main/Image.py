@@ -113,7 +113,9 @@ class Image(Base):
         image_data = bytes(re.sub(r, '', data), encoding='ascii')
 
         image = PIL_Image.open(BytesIO(base64.b64decode(image_data)))
-        return Image.save(image,filename, max_width,max_height)
+        croped_image = image.crop((0,0,min(image.size),min(image.size)))
+
+        return Image.save(croped_image,filename, max_width,max_height)
         
 
         

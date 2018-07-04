@@ -88,6 +88,41 @@ def append(bp,bp_api):
 
         return jsonify({ 'errors': [], 'data': party_serialized})
 
+    @bp_api.route('/leave/<string:token>', methods=('GET',))
+    @auth.login_required
+    @auth.group_required('active')
+    @auth.notin_group_required('blocked')
+    def api_party_leave(token):
+
+        party = models.party.Party.query.filter_by(code=token).first()
+        
+        if party is None:
+            return jsonify({ 'errors': [{'description': 'No party was found'}], 'data': []})
+        
+        party_serialized = party.serialize()
+        
+        if party.status != 'created':
+            return jsonify({ 'errors': [{'description': 'Party was already started'}], 'data': party_serialized})
+        
+        if len(party.participants) <= 0:
+            return jsonify({ 'errors': [{'description': 'Party cannot be empty!'}], 'data': party_serialized})
+        
+        user = next( (user for user in party.participants if user.id == g.me.id), None)
+
+        if user is None:
+            return jsonify({ 'errors': [{'description': 'User already was out'}], 'data': party_serialized})
+
+        if party.owner.id == user.id:
+            return jsonify({ 'errors': [{'description': 'Owner cannot leave the party'}], 'data': party_serialized})
+
+        party.participants.remove(user)
+        models.db.session.commit()
+        party_serialized = party.serialize()
+
+
+        return jsonify({ 'errors': [], 'data': party_serialized})
+
+
     @bp.route('/create', methods=('GET',))
     @auth.login_required
     @auth.group_required('active')

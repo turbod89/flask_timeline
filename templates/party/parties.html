@@ -10,21 +10,20 @@
             <p><a class="" href="{{ url_for('parties.create_party') }}">Create party</a> or join to one of the following open parties:</p>
         </div>
     </div>
-    <div class ="row" style="padding-top: 100px;">
-        <div class="col-12 text-center">
-            <h2>Open parties</h2>
-        </div>
-    </div>
+
     <div class ="row">
-        <div class="col-12">
-            <table id='open-parties-tbl' class='table'>
+        <div class="col-12 open-parties-col">
+            <table id='_open-parties-tbl' class='table'>
                 <thead></thead>
                 <tbody>
                     <tr>
                         <td>
-                            <div class="alert alert-info" role="alert">
-                                Loading...
-                            </div>
+                            <!--
+
+                                <div class="alert alert-info" role="alert">
+                                    Loading...
+                                </div>
+                            -->
                         </td>
                     </tr>
                 </tbody>
@@ -46,10 +45,205 @@
 <script src="//cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.10.16/js/dataTables.bootstrap4.min.js"></script>
 <script src="https://cdn.rawgit.com/turbod89/toDom/master/toDom.js"></script>
+<script>
+    const g = {
+        me: {
+            id: {{ g.me.id }},
+        },
+    }
+</script>
+<script>
+    class PartyListItem extends HTMLElement {
+        constructor() {
+            super()
+        }
+    }
+</script>
+<script>
+    const partyListItem = party => {
 
+        const participant_index = party.participants.findIndex(p => p.id == g.me.id)
+        const actionButtons = []
+        let me = null
+
+        if (party.status === 'created' && party.participants.length < 4 && participant_index < 0) {
+            actionButtons.push(
+                toDom(['button',{'class': 'btn btn-outline-primary'}, 
+                    ['i',{'class':'fa fa-plus'}],
+                    ' Join',
+                    function $click (event) {
+                        
+                        $.ajax({
+                            url : '/api/parties/join/'+party.code,
+                            type: 'GET',
+                            dataType: 'json',
+                            contentType: "application/json; charset=utf-8",
+                            async: true,
+                            success: function (response) {
+                                
+                                if (response.errors && response.errors.length === 0) {
+                                    console.log(response.data)
+                                    me.parentNode.insertBefore(partyListItem(response.data),me)
+                                    me.parentNode.removeChild(me)
+                                } else {
+                                    console.log(response)
+                                }
+                            },
+                            error: function (data) { console.error(data)}
+                        });
+                    }
+                ])
+            )
+        }
+        
+        if (party.status === 'created' && party.participants.length > 1 && participant_index >= 0 && party.owner.id != g.me.id) {
+            actionButtons.push(
+                toDom(['button',{'class': 'btn btn-outline-danger'}, 
+                    ['i',{'class':'fa fa-minus'}],
+                    ' Leave',
+                    function $click (event) {
+                        
+                        $.ajax({
+                            url : '/api/parties/leave/'+party.code,
+                            type: 'GET',
+                            dataType: 'json',
+                            contentType: "application/json; charset=utf-8",
+                            async: true,
+                            success: function (response) {
+                                
+                                if (response.errors && response.errors.length === 0) {
+                                    console.log(response.data)
+                                    me.parentNode.insertBefore(partyListItem(response.data),me)
+                                    me.parentNode.removeChild(me)
+                                    
+                                } else {
+                                    console.log(response)
+                                }
+                            },
+                            error: function (data) { console.error(data)}
+                        });
+                    }
+                ])
+            )
+        }
+        
+        
+        if (party.status === 'started') {
+            actionButtons.push(
+                toDom(['a',{'class': 'btn btn-outline-primary',href: party.url}, 
+                    ['i',{'class':'fa fa-eye'}],
+                    ' Watch',
+                ])
+            )
+        }
+        
+        me = toDom(
+            [
+                'div',
+                {'class':'card col-sm-6 col-md-4 mx-3 mb-3'},
+                [
+                    'div',
+                    {'class':'card-body'},
+                    [
+                        'h5',
+                        {'class':'card-title'},
+                        party.name || '',
+                    ],
+                    [
+                        'h6',
+                        {'class':'card-title mb-2 text-muted'},
+                        party.owner.first_name || '', ' ',
+                        party.owner.last_name || '',
+                    ],
+                    [
+                        'div',
+                        {'class': 'mb-2 text-center'},
+                        [
+                            (ud,i) => ['img', {
+                                'src': '/profile/avatar/'+ud.id,
+                                'width': 48,
+                                'height': 48,
+                                'class': "mx-1 rounded-circle img-thumbnail" + (ud.id === party.owner.id ? ' border-primary' : ''),
+                                'data-toggle': 'tooltip',
+                                'data-placement': 'bottom',
+                                'title': ud.first_name + ' ' + ud.last_name,
+                            }],
+                            party.participants,
+                        ]
+                    ],
+                    actionButtons,
+                ],
+            ]
+        )
+
+        return me
+    }
+
+    const partyList = partiesData => {
+        let me = null
+        const partiesList = partiesData.map(partyListItem)
+
+        me = toDom(
+            [
+                'div',
+                {'class': 'row'},
+                [
+                    'div',
+                    {'class': 'col-12'},
+                    [
+                        'div',
+                        {'class': 'input-group mb-3'},
+                        [
+                            'div',
+                            {'class': 'input-group-prepend'},
+                            [
+                                'span',
+                                {'class':'input-group-text',id: 'filter-lbl'},
+                                'Filter:',
+                            ],
+                        ],
+                        [
+                            'input',
+                            {
+                                'type':'text',
+                                'class':'form-control',
+                                'placeholder':'',
+                            },
+                            function $keyup (event) {
+                                partiesList.forEach ((partyElement,i) => {
+                                    if (this.value.length > 2) {
+                                        const partyData = partiesData[i]
+                                        const r = new RegExp(this.value,'ig')
+                                        const match = r.test(partyData.name)
+                                            || r.test(partyData.owner.first_name + ' ' + partyData.owner.last_name)
+                                        
+                                        
+                                        if (match) {
+                                            partyElement.classList.remove('d-none')    
+                                        } else {
+                                            partyElement.classList.add('d-none')
+                                        }
+
+                                    } else {
+                                        partyElement.classList.remove('d-none')
+                                    }
+
+                                })
+                                    
+                            }
+                        ],
+                    ],
+                ],
+                partiesList,
+            ]
+        )
+        
+        return me
+    }
+</script>
 <script>
 
-
+    
     const dataAddGroupParser = data => {
 
         /*
@@ -83,7 +277,7 @@
                     "data": "name",
                 },
                 { "title": "Status", "data": "status", },
-                { "title": "Users", "data": "participats", },
+                { "title": "Users", "data": "participants", },
                 {
                     "title": "Actions",
                     "data": "id",
@@ -131,16 +325,41 @@
                     },
                     "createdCell": function(td,cellData,rowData,row,col) {
 
-                        //const participant_index = rowData.participants.findIndex(p => p.id == )
+                        const participant_index = rowData.participants.findIndex(p => p.id == g.me.id)
 
-                        if (rowData.status === 'created' ) {
+                        if (rowData.status === 'created' && rowData.participants.length < 4 && participant_index < 0) {
                             toDom(['button',{'class': 'btn btn-outline-primary'}, 
                                 ['i',{'class':'fa fa-plus-square'}],
                                 function $click (event) {
                                     
                                     $.ajax({
                                         url : '/api/parties/join/'+rowData.code,
-                                        type: 'GEt',
+                                        type: 'GET',
+                                        dataType: 'json',
+                                        contentType: "application/json; charset=utf-8",
+                                        async: true,
+                                        data : JSON.stringify({groupId: rowData.id}),
+                                        success: function (response) {
+                                            
+                                            if (response.errors && response.errors.length === 0) {
+                                                console.log(response.data)
+                                                $('#open-parties-tbl').DataTable().rows(row).data(response.data).draw()
+                                            } else {
+                                                console.log(response)
+                                            }
+                                        },
+                                        error: function (data) { console.error(data)}
+                                    });
+                                }
+                            ],{at:td})
+                        } else if (rowData.status === 'created' && rowData.participants.length > 1 && participant_index >= 0 && rowData.owner.id == g.me.id) {
+                            toDom(['button',{'class': 'btn btn-outline-danger'}, 
+                                ['i',{'class':'fa fa-minus-square'}],
+                                function $click (event) {
+                                    
+                                    $.ajax({
+                                        url : '/api/parties/left/'+rowData.code,
+                                        type: 'GET',
                                         dataType: 'json',
                                         contentType: "application/json; charset=utf-8",
                                         async: true,
@@ -179,6 +398,8 @@
         table.clear()
         table.rows.add(data)
         table.draw();
+
+        toDom(partyList(data),{at:'.open-parties-col'})
     }
 
     const getParties = () => {

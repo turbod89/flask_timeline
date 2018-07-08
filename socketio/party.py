@@ -1,8 +1,19 @@
 from flask import g, session, request
 
-from flask_socketio import Namespace, emit
+from flask_socketio import Namespace, emit, join_room, leave_room
 
 from .. import models, routes
+
+
+def load_login_or_ignore(func):
+    def wrapped_func(*args, **kwargs):
+        routes.auth.load_logged_in_user()
+        if g.me is None:
+            return None
+
+        return func(*args, **kwargs)
+
+    return wrapped_func
 
 
 class Party(Namespace):
@@ -11,79 +22,153 @@ class Party(Namespace):
         Constructor
     '''
     def __init__(self, *args, **kwargs):
-        self.connectedUsers = []
-        self.cardsInGame = [
-            {
-                "id": 0,
-                "title": "card 1",
-                "pos": [0.2,0.2]
-            },
-            {
-                "id": 1,
-                "title": "card 2",
-                "pos": [0.2,0.4]
-            },
-            {
-                "id": 3,
-                "title": "card 3",
-                "pos": [0.6,0.8]
-            },
-        ]
+        self.rooms = {}
+        self.connUsers = {}
+        
         super(Party,self).__init__(*args,**kwargs)
 
     '''
         Helpers
     '''
-    def emitUsers(self):
-        print('\nemit\n')
-        self.emit('connected_users',[{'email': user['email'],'id': user['userId']} for user in self.connectedUsers])
+    def emitUsers(self,room):
+        players = [{'email': connUser['user'].email,'id': connUser['user'].id} for connUser in room['players']]
+        watchers = [{'email': connUser['user'].email,'id': connUser['user'].id} for connUser in room['watchers']]
 
-    def emitCards(self):
-        self.emit('cards_in_game',self.cardsInGame)
+        self.emit('connected_users',{
+            'players': players,
+            'watchers': watchers,
+        },
+        room = room['token'])
+
+    def emitCards(self,room):
+        print('emit cards')
+        party = room['party']
+        n = len(party.tableDeck.cards)
+        print ('%s cards in table' % str(n))
+        data = []
+        cnt = 0
+        for card in party.tableDeck.cards:
+            data.append({
+                'id': card.id,
+                'name': card.name,
+                'title': card.name,
+                'pos': [
+                    0.5,
+                    cnt/(n+1),
+                ]
+            })
+            cnt = cnt + 1
+
+        self.emit('cards_in_game',data,room=room['token'])
+
+    def getRoom(self, token):
+
+        if token not in self.rooms:
+            self.rooms[token] = {
+                'token': token,
+                'players': [],
+                'watchers': [],
+                'party': models.party.Party.query.filter_by(code = token).first()
+            }
+        return self.rooms[token]
+
+    def addUserToRoom(self,user,room):
+
+        if user.id in self.connUsers:
+            self.removeUserFromRoom(user,self.connUsers[user.id])
+        
+        connUser = None
+        if user.id in [user.id for user in room['party'].participants]:
+            connUser = {
+                'user': user,
+                'sid': request.sid,
+                'room': room,
+            }
+            room['players'].append(connUser)
+        else:
+            connUser = {
+                'user': user,
+                'sid': request.sid,
+                'room': room,
+            }
+            room['watchers'].append(connUser)
+
+        self.connUsers[user.id] = connUser
+        join_room(room['token'])
+
+        return connUser
+
+    def removeUserFromRoom(self,user,room):
+
+        if user.id not in self.connUsers:
+            return
+
+        if user.id in [user.id for user in room['party'].participants]:
+            room['players'].remove(self.connUsers[user.id])
+        else:
+            room['watchers'].remove(self.connUsers[user.id])
+
+        return self.connUsers.pop(user.id,None)
+
+    def removeUserFromAnyRoom(self,user):
+        if user.id in self.connUsers:
+            return self.removeUserFromRoom(user,self.connUsers[user.id]['room'])
+        return None
+        
+
+    def isUserInRoom(self,user,room):
+        if user.id not in self.connUsers:
+            return False
+        return self.connUsers[user.id]['room'] == room
+    
+    def isUserInSomeRoom(self, user):
+        if user.id not in self.connUsers:
+            return False
+        return self.connUsers['room'] is not None
         
     '''
         On connect
     '''
+    @load_login_or_ignore
     def on_connect(self):
-        routes.auth.load_logged_in_user()
-        
-        if g.me is not None:
-            connUser = None
-            for conn in self.connectedUsers:
-                if conn['email'] == g.me.email:
-                    connUser = conn
-
-            if connUser is None:
-                self.connectedUsers.append({
-                    'userId': g.me.id,
-                    'email': g.me.email,
-                    'sid': request.sid
-                })
-            
-            self.emitUsers()
-            self.emitCards()
-
+        pass
     
     '''
         On disconnect
     '''
-    def on_disconnect(self):
-        routes.auth.load_logged_in_user()
-
-        if g.me is not None:
-            conn = next( x for x in self.connectedUsers if x['userId'] == g.me.id)
-            self.connectedUsers.remove(conn)
-            self.emitUsers()
-
     
+    @load_login_or_ignore
+    def on_disconnect(self):
+        
+        connUser = self.removeUserFromAnyRoom(g.me)
+        if connUser is not None:
+            self.emitUsers(connUser['room'])
+
     '''
         On custom events
     '''
+    @load_login_or_ignore
     def on_update_card(self,card):
-        print('on update card')
-        routes.auth.load_logged_in_user()
+        serverCard = next(c for c in self.cardsInGame if c['id'] == card['id'])
+        serverCard['pos'] = card['pos']
+        self.emitCards()
+
+
+    @load_login_or_ignore
+    def on_join(self,roomToken):
+        print('User %s joined to room %s' %(g.me,roomToken,))
+        room = self.getRoom(roomToken)
+        party = room['party']
+
+        if self.isUserInRoom(g.me, room):
+            pass
+        else:
+            self.addUserToRoom(g.me,room)
+            self.emitUsers(room)
+            self.emitCards(room)
+
+        
+        
+
+
     
-        if g.me is not None:
-            serverCard = next(c for c in self.cardsInGame if c['id'] == card['id'])
-            serverCard['pos'] = card['pos']
-            self.emitCards()

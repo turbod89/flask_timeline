@@ -9,7 +9,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from PIL import Image as PIL_Image
 import os
-
+import json
 
 
 def generate(db):
@@ -31,6 +31,10 @@ def generate(db):
             'avatar': 'data/chewaka.jpg'
         }
     ]
+
+    decks = None
+    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data/decks.json')) as json_data:
+        decks = json.load(json_data)
 
     for tGroup in groups:
         group = models.auth.Group(name=tGroup['name'], description = tGroup['description'])
@@ -64,6 +68,24 @@ def generate(db):
             user.groups.append(group)
     
     db.session.commit()
+
+    for tDeck in decks:
+        deck = models.party.Deck(
+            name=tDeck['name'],
+            description= None if 'description' not in tDeck else tDeck['description'],
+        )
+        db.session.add(deck)
+        for tCard in tDeck['cards']:
+            card = models.party.Card(
+                name=tCard['name'],
+                year=tCard['year'],
+                description=tCard['description'],
+                deck=deck,
+            )
+            db.session.add(card)
+
+    db.session.commit()
+
 
 def init_app(app,db):
 

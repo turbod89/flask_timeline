@@ -68,7 +68,7 @@ const UserManager = function (socket,scene) {
 
     socket.on('connected_users', function (data) {
         console.log(data)
-        data.forEach ((userData,i) => {
+        data.players.forEach ((userData,i) => {
             const index = userManager.users.findIndex(user => user.id === userData.id)
 
             if (index < 0) {

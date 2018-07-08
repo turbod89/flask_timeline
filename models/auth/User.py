@@ -23,7 +23,7 @@ class User(Base):
     groups = db.relationship('Group', secondary=relUsersGroups,
         backref=db.backref('users', lazy='dynamic'))
 
-    profile = db.relationship("Profile", uselist=False, back_populates="user")
+    profile = db.relationship("Profile", uselist=False, back_populates="user", lazy='subquery')
 
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
@@ -33,10 +33,7 @@ class User(Base):
         return "<User(id='%s',email='%s')>" % (self.id, self.email)
 
     def __str__(self):
-        if self.is_admin:
-            return "!! %s %s (%s)" % (self.first_name, self.last_name, self.email)
-        else:
-            return "%s %s (%s)" % (self.first_name, self.last_name, self.email)
+        return "%s %s (%s)" % (self.profile.first_name, self.profile.last_name, self.email)
 
     def belongsTo(self,groupName):
         return groupName in [ x.name for x in self.groups]

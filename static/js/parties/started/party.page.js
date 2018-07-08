@@ -73,6 +73,10 @@ const getLights = scene => {
 window.addEventListener('load', event => {
 
     const socket = io.connect('http://' + document.domain + ':' + location.port + '/party');
+    socket.on('connect', () => {
+        console.log(socket.id)
+        socket.emit('join',g.party.token)
+    })
 
     const canvas = document.getElementById('cv1')
     const touchManager = new TouchManager(canvas)

@@ -7,9 +7,15 @@
 {% block localJs %}
 <script type="text/javascript" src="{{ url_for('static',filename='js/socket.io.min.js') }}"></script>
 <script>
-    const socket = io.connect('http://' + document.domain + ':' + location.port + '/party');
+    const g = {
+        me: {
+            id: {{ g.me.id }},
+        },
+        party: {
+            token: "{{ token }}",
+        },
+    }
 </script>
-
 <script src="{{ url_for('static',filename='three.min.js') }}"></script>
 <script src="{{ url_for('static',filename='orbitControls.min.js') }}"></script>
 <script src="{{ url_for('static',filename='js/parties/started/drawings.js') }}"></script>

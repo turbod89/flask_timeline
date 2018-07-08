@@ -104,11 +104,14 @@ def generate(app,db):
         players = random.sample(users,num_players)
         owner = random.sample(players,1)[0]
         name  = '%s\'s party #%i' % (owner.profile.first_name, i+1)
+        deck = models.party.Deck.query.filter_by(name='proof').first()
+
 
         party.status = status
         party.participants = players
         party.owner = owner
         party.name = name
+        party.deck = deck
 
         db.session.add(party)
     db.session.commit()

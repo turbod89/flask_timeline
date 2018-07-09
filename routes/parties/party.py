@@ -31,7 +31,8 @@ def append(bp,bp_api):
     def api_parties():
 
         if request.method == 'GET':
-            parties = models.party.Party.query.filter(models.party.Party.status.in_(('created','started',))).all()
+            
+            parties = models.party.Party.query.filter(models.party.Party.status.in_((models.party.Party.STATE_CREATED, models.party.Party.STATE_STARTED,))).all()
             parties_json = [party.serialize() for party in parties]
 
             for party_dict in parties_json:
@@ -49,7 +50,7 @@ def append(bp,bp_api):
                 name = data['name'] or name
 
             if error is None:
-                party = models.party.Party(name=name,status='created')
+                party = models.party.Party(name=name,status=models.party.Party.STATE_CREATED)
                 party.owner = g.me
                 party.participants = [g.me]
                 models.db.session.add(party)
@@ -70,7 +71,7 @@ def append(bp,bp_api):
         
         party_serialized = party.serialize()
         
-        if party.status != 'created':
+        if party.status != models.party.Party.STATE_CREATED:
             return jsonify({ 'errors': [{'description': 'Party was already started'}], 'data': party_serialized})
         
         if len(party.participants) >= 4:
@@ -101,7 +102,7 @@ def append(bp,bp_api):
         
         party_serialized = party.serialize()
         
-        if party.status != 'created':
+        if party.status != models.party.Party.STATE_CREATED:
             return jsonify({ 'errors': [{'description': 'Party was already started'}], 'data': party_serialized})
         
         if len(party.participants) <= 0:

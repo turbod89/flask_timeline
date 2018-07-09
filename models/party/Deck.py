@@ -2,7 +2,7 @@ from ..Base import Base, db
 from sqlalchemy.sql import func
 
 from werkzeug.security import check_password_hash, generate_password_hash
-import time
+import time, random
 
 class Deck(Base):
     __tablename__ = 'decks'
@@ -77,7 +77,7 @@ class Deck(Base):
         if self.isEmpty():
             return None
         elif card == None:
-            return self.take(1)._cards[0]
+            return self.take(1).cards[0]
         elif isinstance(card, Card) and (card in self.cards):
             self.cards.remove(card)
             return card

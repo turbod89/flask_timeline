@@ -6,7 +6,7 @@ from ... import models
 from werkzeug.security import check_password_hash, generate_password_hash
 import time
 
-import hashlib
+import hashlib, random
 
 relUsersParties = db.Table('relUsersParties',
     db.Column('user', db.Integer, db.ForeignKey('users.id'), primary_key=True),
@@ -21,9 +21,9 @@ relPartiesDecks = db.Table('relPartiesDecks',
 class Party(Base):
     __tablename__ = 'parties'
 
-    STATE_CREATED = 'created'
-    STATE_STARTED = 'started'
-    STATE_FINISHED = 'finished'
+    STATE_CREATED = 0
+    STATE_STARTED = 1
+    STATE_FINISHED = 2
 
     ERROR_OK = 0
     ERROR_UNKNOW = 1
@@ -31,7 +31,7 @@ class Party(Base):
     INITIAL_NUM_CARDS = 5
 
     name = db.Column('name', db.String(128), nullable = False, unique = False)
-    status = db.Column('status', db.String(32), nullable = True, unique = False)
+    status = db.Column('status', db.Integer, nullable = False, unique = False)
     code = db.Column('code', db.String(128), nullable = False, unique = True)
     password = db.Column('password', db.String(128), nullable = True, default = None)
 
@@ -50,10 +50,13 @@ class Party(Base):
     userDecks = None
     dealer = 0
 
-    @orm.reconstructor
+    
     def __init__(self, **kwargs):
         super(Party, self).__init__(**kwargs)
         self.code = hashlib.md5(str(time.time()).encode()).hexdigest()
+    
+    @orm.reconstructor    
+    def reconstructor  (self, **kwargs):
         self.dealer = 0
         self.mainDeck = self.deck
         self.tableDeck = models.party.Deck()
@@ -82,19 +85,19 @@ class Party(Base):
 
 
     def __len__(self):
-        return len(self.users)
+        return len(self.participants)
 
     def start(self):
-        if self.state >= self.STATE_STARTED:
+        if self.status >= self.STATE_STARTED:
             return self.ERROR_UNKNOW
         elif len(self) < 2:
             return self.ERROR_UNKNOW
         else:
-            self.state = self.STATE_STARTED
+            self.status = self.STATE_STARTED
             self.dealer = 0
             # shuffle cards
             self.mainDeck.shuffle()
-            for user in self.users:
+            for user in self.participants:
                 self.userDecks.append(self.mainDeck.take(self.INITIAL_NUM_CARDS))
             # put first card
             card = self.mainDeck.takeCard()
@@ -104,7 +107,7 @@ class Party(Base):
             
 
     def _checkIfUserExists(self, targetUser):
-        for user in self.users:
+        for user in self.participants:
             if user.id == targetUser.id:
                 return True
         return False
@@ -114,7 +117,7 @@ class Party(Base):
             if self._checkIfUserExists(user):
                 return self.ERROR_UNKNOW
             else:
-                self.users.append(user)
+                self.participants.append(user)
         elif type(user) == list:
             for u in user:
                 error = self.join(u)
@@ -128,7 +131,7 @@ class Party(Base):
     def leave(self, user):
         if isinstance(user, models.auth.User):
             if self._checkIfUserExists(user):
-                self.users.remove(user)
+                self.participants.remove(user)
             else:
                 return self.ERROR_UNKNOW
 
@@ -145,23 +148,23 @@ class Party(Base):
 
 
     def getStateDesc(self):
-        if self.state == self.STATE_CREATED:
+        if self.status == self.STATE_CREATED:
             return "Game created, just waiting to start"
-        elif self.state == self.STATE_STARTED:
+        elif self.status == self.STATE_STARTED:
             return "Game started, playing"
-        elif self.state == self.STATE_FINISHED:
+        elif self.status == self.STATE_FINISHED:
             return "Game finished"
         else:
             return "Game state unknow"
 
     def getState(self):
-        return self.state
+        return self.status
 
     def getDealer(self):
-        return self.users[self.dealer % len(self.users)]
+        return self.participants[self.dealer % len(self.participants)]
 
     def getHand(self,user):
-        index = self.users.index(user)
+        index = self.participants.index(user)
 
         if type(index) == int:
             return self.userDecks[index]
@@ -170,13 +173,13 @@ class Party(Base):
 
 
     def _setState(self,state):
-        self.state = state
+        self.status = state
         return self
 
     def _updateState(self):
 
         if self.getState() == self.STATE_STARTED:
-            for i in range(len(self.users)):
+            for i in range(len(self.participants)):
                 if len(self.userDecks[i]) == 0:
 
                     return self._setState(self.STATE_FINISHED)
@@ -188,9 +191,9 @@ class Party(Base):
         if self.getState() != self.STATE_FINISHED:
             return False
         else:
-            for i in range(len(self.users)):
+            for i in range(len(self.participants)):
                 if len(self.userDecks[i]) == 0:
-                    return self.users[i]
+                    return self.participants[i]
             return None
 
 
@@ -247,13 +250,13 @@ class Party(Base):
     def print(self):
         print ('Name:\t\'%s\'\tState:%s\t\n' % (self.name, self.getStateDesc()))
         if self.getState() == self.STATE_CREATED:
-            for i in range(len(self.users)):
-                user = self.users[i]
+            for i in range(len(self.participants)):
+                user = self.participants[i]
                 print ('\t%i. %s' % (i,str(user)))
 
         elif self.getState() == self.STATE_STARTED:
-            for i in range(len(self.users)):
-                user = self.users[i]
+            for i in range(len(self.participants)):
+                user = self.participants[i]
                 userDeck = self.userDecks[i]
 
                 if self.getDealer() == user:

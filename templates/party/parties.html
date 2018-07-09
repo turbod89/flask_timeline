@@ -66,7 +66,7 @@
         const actionButtons = []
         let me = null
 
-        if (party.status === 'created' && party.participants.length < 4 && participant_index < 0) {
+        if (party.status === 0 && party.participants.length < 4 && participant_index < 0) {
             actionButtons.push(
                 toDom(['button',{'class': 'btn btn-outline-primary'}, 
                     ['i',{'class':'fa fa-plus'}],
@@ -96,7 +96,7 @@
             )
         }
         
-        if (party.status === 'created' && party.participants.length > 1 && participant_index >= 0 && party.owner.id != g.me.id) {
+        if (party.status === 0 && party.participants.length > 1 && participant_index >= 0 && party.owner.id != g.me.id) {
             actionButtons.push(
                 toDom(['button',{'class': 'btn btn-outline-danger'}, 
                     ['i',{'class':'fa fa-minus'}],
@@ -128,7 +128,7 @@
         }
         
         
-        if (party.status === 'started') {
+        if (party.status === 1) {
             actionButtons.push(
                 toDom(['a',{'class': 'btn btn-outline-primary',href: party.url}, 
                     ['i',{'class':'fa fa-eye'}],
@@ -327,7 +327,7 @@
 
                         const participant_index = rowData.participants.findIndex(p => p.id == g.me.id)
 
-                        if (rowData.status === 'created' && rowData.participants.length < 4 && participant_index < 0) {
+                        if (rowData.status === 0 && rowData.participants.length < 4 && participant_index < 0) {
                             toDom(['button',{'class': 'btn btn-outline-primary'}, 
                                 ['i',{'class':'fa fa-plus-square'}],
                                 function $click (event) {
@@ -352,7 +352,7 @@
                                     });
                                 }
                             ],{at:td})
-                        } else if (rowData.status === 'created' && rowData.participants.length > 1 && participant_index >= 0 && rowData.owner.id == g.me.id) {
+                        } else if (rowData.status === 0 && rowData.participants.length > 1 && participant_index >= 0 && rowData.owner.id == g.me.id) {
                             toDom(['button',{'class': 'btn btn-outline-danger'}, 
                                 ['i',{'class':'fa fa-minus-square'}],
                                 function $click (event) {
@@ -377,7 +377,7 @@
                                     });
                                 }
                             ],{at:td})
-                        } else if (rowData.status === 'started') {
+                        } else if (rowData.status === 1) {
                             toDom(['a',{'class': 'btn btn-outline-primary',href: rowData.url}, 
                                 ['i',{'class':'fa fa-eye'}],
                                 

@@ -6,12 +6,22 @@ const getCamera = (renderer, scene) => {
     const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 
     const R = 40
-    const theta = 0.05 * 2 * Math.PI / 4
+    const theta = 0.25 * 2 * Math.PI / 4
     camera.position.z = R * Math.cos(theta)
     camera.position.y = -R * Math.sin(theta)
     camera.lookAt(new THREE.Vector3(0, 0, 0))
     scene.add(camera)
     camera.updateProjectionMatrix()
+    const clock = new THREE.Clock()
+    camera.userData.render = () => {
+        const t = clock.getElapsedTime()
+        /*
+        const theta = (Math.sin(t/10 * 2*Math.PI)+1)/2 * 2 * Math.PI / 4
+        camera.position.z = R * Math.cos(theta)
+        camera.position.y = -R * Math.sin(theta)
+        camera.lookAt(new THREE.Vector3(0, 0, 0))
+        */
+    }
 
     //camera.userData.controls = new THREE.OrbitControls(camera)
     //camera.userData.controls.update();
@@ -107,8 +117,8 @@ window.addEventListener('load', event => {
     regions.forEach (region => scene.add(region.mesh))
     scene.userData.add(regions,regions)
 
-    raycaster.setFromCamera({x: 1,y:1},camera)
-    raycaster.ray.origin.copy((new THREE.Vector3(1,1,-1)).unproject(camera))
+    raycaster.setFromCamera({x: 1,y:1,z: 0.5},camera)
+    raycaster.ray.origin.copy((new THREE.Vector3(1,1,0.5)).unproject(camera))
     console.log(raycaster.ray)
     const plane = new THREE.Plane(new THREE.Vector3(0,0,1),0)
     const topLeft = raycaster.ray.intersectPlane(plane)
@@ -122,8 +132,14 @@ window.addEventListener('load', event => {
     )
 
 
-    cube.position.set(-1,-1,-10).unproject(camera)
+    //cube.position.set(-1,-1,-10).unproject(camera)
     //console.log(cube.position.copy(topLeft))
+    var p = (new THREE.Vector3(1,1,0.5)).unproject(camera)
+    var dir = p.sub( camera.position ).normalize();
+    var distance = - camera.position.z / dir.z;
+    var pos = camera.position.clone().add( dir.multiplyScalar( distance ) );
+    console.log(pos)
+    cube.position.copy(pos)
 
     scene.add(cube)
 
@@ -194,6 +210,8 @@ window.addEventListener('load', event => {
         //camera.userData.controls.update();
         lights.render()
         table.render()
+        userManager.render()
+        camera.userData.render()
         renderer.render(scene, camera);
     };
 

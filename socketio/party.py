@@ -31,8 +31,13 @@ class Party(Namespace):
         Helpers
     '''
     def emitUsers(self,room):
-        players = [{'email': connUser['user'].email,'id': connUser['user'].id} for connUser in room['players']]
+        players = [{'email': user.email,'id': user.id} for user in room['party'].participants]
         watchers = [{'email': connUser['user'].email,'id': connUser['user'].id} for connUser in room['watchers']]
+
+        for player in players:
+            connUser = next((connUser for connUser in room['players'] if connUser['user'].id == player['id']), None)
+            player['connected'] = True if connUser is not None else False
+            
 
         self.emit('connected_users',{
             'players': players,
@@ -40,7 +45,7 @@ class Party(Namespace):
         },
         room = room['token'])
 
-    def emitCards(self,room):
+    def emitTableCards(self,room):
         print('emit cards')
         party = room['party']
         n = len(party.tableDeck.cards)
@@ -53,8 +58,8 @@ class Party(Namespace):
                 'name': card.name,
                 'title': card.name,
                 'pos': [
+                    (cnt+1)/(n+1),
                     0.5,
-                    cnt/(n+1),
                 ]
             })
             cnt = cnt + 1
@@ -70,6 +75,11 @@ class Party(Namespace):
                 'watchers': [],
                 'party': models.party.Party.query.filter_by(code = token).first()
             }
+
+            if self.rooms[token]['party'].status == models.party.Party.STATE_STARTED:
+                self.rooms[token]['party'].status = models.party.Party.STATE_CREATED
+                self.rooms[token]['party'].start()
+
         return self.rooms[token]
 
     def addUserToRoom(self,user,room):
@@ -151,7 +161,7 @@ class Party(Namespace):
     def on_update_card(self,card):
         serverCard = next(c for c in self.cardsInGame if c['id'] == card['id'])
         serverCard['pos'] = card['pos']
-        self.emitCards()
+        self.emitTableCards()
 
 
     @load_login_or_ignore
@@ -165,7 +175,7 @@ class Party(Namespace):
         else:
             self.addUserToRoom(g.me,room)
             self.emitUsers(room)
-            self.emitCards(room)
+            self.emitTableCards(room)
 
         
         

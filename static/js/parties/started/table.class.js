@@ -1,8 +1,29 @@
 Table = function (camera) {
 
+    THREE.Group.apply(this, arguments);
+
+    const points = [{x: -1, y:1},{x: 1, y:1},{x: -1, y:-1},{x: 1, y:-1}].map( point2d => {
+        const raycaster = new THREE.Raycaster()
+        raycaster.setFromCamera(point2d, camera)
+        const pointA = raycaster.ray.origin
+        const direction = raycaster.ray.direction
+        direction.normalize();
+
+        const lambda = -pointA.z / direction.z;
+        if (lambda < 0) {
+            lambda = 100
+        }
+
+        const pointB = new THREE.Vector3();
+        pointB.addVectors(pointA, direction.multiplyScalar(lambda));
+        return pointB
+    })
+
     const R = camera.position.length()
-    const h = 2 * R / 3
-    const w = 1.618 * h
+    const w = Math.min(points[1].x - points[0].x,points[3].x  - points[2].x)
+    const h = 2*Math.min(points[0].y,-points[2].y)
+    this.width = w
+    this.height = h
 
     const geometry = new THREE.BoxGeometry(w,h, 1);
     const material = new THREE.MeshStandardMaterial({
@@ -10,13 +31,9 @@ Table = function (camera) {
         roughness: 0.8,
     });
 
-    THREE.Mesh.call(this,geometry,material)
-
-    const mesh = this//new THREE.Mesh(geometry, material);
+    const mesh = new THREE.Mesh(geometry, material);
     mesh.position.z = -1
-
-    this.mesh = mesh
-    this.clock = new THREE.Clock()
+    this.add(mesh)
 
     const sphere_bGeometry = new THREE.SphereBufferGeometry(0.25, 16, 8)
     
@@ -48,18 +65,17 @@ Table = function (camera) {
         return s
     })
 
-    lightDefinitions.forEach(ld => this.mesh.add(ld.light))
+    lightDefinitions.forEach(ld => this.add(ld.light))
 
 
-    this.render = function () {
-        const t = this.clock.getElapsedTime()
+    this.render = function (t) {
         lightDefinitions.forEach( ld => {
             ld.render(ld.light)(t)
         })
     }
 
-
+    console.log(this)
     return this
 }
 
-Table.prototype = Object.create(THREE.Mesh.prototype)
+Table.prototype = Object.create(THREE.Group.prototype)

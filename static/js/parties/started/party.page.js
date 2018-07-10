@@ -1,7 +1,7 @@
 const getLights = (scene,table) => {
 
-    const t_w = table.mesh.geometry.parameters.width
-    const t_h = table.mesh.geometry.parameters.height
+    const t_w = table.width
+    const t_h = table.height
 
     const LightSystem = function () {
         this.clock = new THREE.Clock()
@@ -17,8 +17,8 @@ const getLights = (scene,table) => {
     
     const definitions = [
         {
-            l: new THREE.AmbientLight(0xffffff, 1,1000),
-            p: l => t => {l.position.set(0,0,t_h/2)},
+            l: new THREE.PointLight(0xffffff, 0.5,100),
+            p: l => t => {l.position.set(0,0,table.height/2)},
         },
     ]
     
@@ -27,35 +27,13 @@ const getLights = (scene,table) => {
         render: o.p(o.l),
     }))
 
-    lights.forEach( sl => scene.add(sl.light))
+    lights.forEach( sl => {
+        scene.add(sl.light)
+        sl.render(0)
+    })
 
     return lights
 }
-
-const CameraModel = function () {
-
-    const material = new THREE.MeshStandardMaterial({
-        metalness: 0.8,
-        roughness: 0.8,
-        color: 0xaaaaaa,
-    })
-
-    const bodyGeom = new THREE.BoxGeometry(1,2,3)
-    const bodyMesh = new THREE.Mesh(bodyGeom,material)
-    bodyMesh.material.wireframe = true
-
-    const objGeom = new THREE.CylinderGeometry(0.6,0.4,0.5)
-    const objMesh = new THREE.Mesh(objGeom,material)
-    objMesh.rotateX(-Math.PI/2)
-    objMesh.position.set(0,0,-(0.5 + 2/2))
-    objMesh.material.wireframe = true
-
-
-    this.add(bodyMesh)
-    this.add(objMesh)
-
-}
-CameraModel.prototype = Object.create(new THREE.Group())
 
 
 window.addEventListener('load', event => {
@@ -72,7 +50,7 @@ window.addEventListener('load', event => {
 
     sceneManager
         .registerScene('main scene', scene => {
-            scene.background = new THREE.Color( 0xffffff );
+            scene.background = new THREE.Color( 0x000000 );
         })
         .registerCamera('main camera',{
             fov: 45,
@@ -80,17 +58,25 @@ window.addEventListener('load', event => {
         }, camera => {
 
             
-            camera.add(new CameraModel())
+            camera.add(new CameraModel(0xff0000))
 
-            const R = 40
-            const theta = 0.25 * 2 * Math.PI / 4
+            const R = 20
+            const theta = 0.05 * 2 * Math.PI / 4
             camera.position.z = R * Math.cos(theta)
             camera.position.y = -R * Math.sin(theta)
             camera.lookAt(new THREE.Vector3(0, 0, 0))
+            console.log(camera)
             camera.updateProjectionMatrix()
+            camera.updateMatrix();
+            sceneManager.step()
+
 
         })
 
+    const table = new Table(sceneManager.getCamera('main camera'))
+    sceneManager.getScene('main scene').add(table);
+    
+    sceneManager
         .registerCamera('side camera',{
             fov: 45,
             scene: 'main scene',
@@ -98,26 +84,110 @@ window.addEventListener('load', event => {
 
             camera.add(new CameraModel())
 
-            const R = 100
+            const R = 50
             const theta = 0.25 * 2 * Math.PI / 4
-            const phi = 0.25 * 2 * Math.PI / 4
+            const phi = 1 * 2 * Math.PI / 4
+            //camera.position.set(0,0,5)
             //camera.position.set(0,-R * Math.sin(theta), R * Math.cos(theta))
             //camera.rotateX(-theta)
             //camera.rotateZ(phi)
-            camera.position.set(R * Math.sin(theta) * Math.cos(phi),-R * Math.sin(theta) * Math.sin(phi), R * Math.cos(theta))
-            camera.lookAt(new THREE.Vector3(0, 0, 0))
-            //camera.lookAt(sceneManager.getCamera('main camera').position)
+            camera.rotateZ(phi)
+            camera.rotateX(theta)
+            camera.position.set(R * Math.sin(theta) * Math.sin(phi),-R * Math.sin(theta) * Math.cos(phi), R * Math.cos(theta))
+            //camera.lookAt(table.position)
             camera.updateProjectionMatrix()
         })
 
+        .registerCamera('back camera', {
+            fov: 45,
+            scene: 'main scene',
+        }, camera => {
 
-    const table = new Table(sceneManager.getCamera('main camera'))
-    sceneManager.getScene('main scene').add(table);
+            camera.add(new CameraModel(0x0000ff))
+
+            const R = 15
+            const theta = 0.75 * 2 * Math.PI / 4
+            const phi = 0.0 * 2 * Math.PI / 4
+            //camera.position.set(0,0,5)
+            //camera.position.set(0,-R * Math.sin(theta), R * Math.cos(theta))
+            //camera.rotateX(-theta)
+            camera.rotateZ(Math.PI)
+            camera.rotateX(theta)
+            camera.position.set(R * Math.sin(theta) * Math.sin(phi), R * Math.sin(theta) * Math.cos(phi), R * Math.cos(theta))
+            //camera.lookAt(table.position)
+            camera.updateProjectionMatrix()
+        })
 
     const lights = getLights(sceneManager.getScene('main scene'), table)
+    sceneManager.registerStep('update things', function (t) {
+        //camera.userData.controls.update();
+        lights.render(t)
+        table.render(t)
+        //userManager.render()
+        //camera.userData.render()
+    })
+
+    sceneManager.schedule = [ 'update things']
+
+    const raycasters = [{x: 1, y:1},{x: 1, y:-1},{x: -1, y:1},{x: -1, y:-1}].map( point => {
+        const raycaster = new THREE.Raycaster()
+        raycaster.setFromCamera(point,sceneManager.getCamera('main camera'))
+        var pointA = raycaster.ray.origin
+        var direction = raycaster.ray.direction
+        direction.normalize();
     
+        var lambda = - pointA.z/direction.z;
+        if (lambda < 0) {
+            lambda = 100
+        }
     
+        var pointB = new THREE.Vector3();
+        pointB.addVectors(pointA, direction.multiplyScalar(lambda));
     
+        var geometry = new THREE.Geometry();
+        geometry.vertices.push(pointA);
+        geometry.vertices.push(pointB);
+        var material = new THREE.LineBasicMaterial({
+            color: 0xff0000
+        });
+        var line = new THREE.Line(geometry, material);
+        sceneManager.getScene('main scene').add(line);
+        return raycaster
+
+    })
+   
+
+    document.addEventListener('keypress', event => {
+        const cameras = sceneManager.getCameras()
+        const index = ['1', '2', '3', '4', '5', '6', '7', '8', '9'].findIndex(key => event.key === key)
+        if (index >= 0) {
+            sceneManager.selectCamera(cameras[index])
+        }
+    })
+
+    sceneManager.start()
+
+
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     /*
     const cardsInGame = new Deck(socket,scene)
     const userManager = new UserManager(socket,scene)
@@ -216,26 +286,3 @@ window.addEventListener('load', event => {
 
     })
     */
-
-    document.addEventListener('keypress', event => {
-        if (event.key == 1) {
-            sceneManager.selectCamera('main camera')
-        } else if (event.key == 2) {
-            sceneManager.selectCamera('side camera')
-        }
-    })
-
-    sceneManager.registerStep('update things', function (t) {
-        //camera.userData.controls.update();
-        lights.render()
-        table.render()
-        //userManager.render()
-        //camera.userData.render()
-    })
-
-
-    sceneManager.schedule = [ 'update things']
-
-    sceneManager.start()
-
-});

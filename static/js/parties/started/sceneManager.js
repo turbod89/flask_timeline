@@ -49,6 +49,13 @@ const SceneManager = function (canvas) {
             }
         },
 
+        'step': {
+            enumerable: false,
+            value: function () {
+                step()
+            }
+        },
+
         
         'registerScene': {
             enumerable: false,
@@ -99,7 +106,7 @@ const SceneManager = function (canvas) {
         'getScenes': {
             enumerable: false,
             value: function (name) {
-                return scenes.keys()
+                return Object.keys(scenes)
             }
         },
         
@@ -113,7 +120,7 @@ const SceneManager = function (canvas) {
         'getCameras': {
             enumerable: false,
             value: function (name) {
-                return cameras.keys()
+                return Object.keys(cameras)
             }
         },
 

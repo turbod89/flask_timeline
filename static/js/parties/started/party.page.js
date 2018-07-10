@@ -1,52 +1,5 @@
-const getCamera = (renderer, scene) => {
-    const fov = 45;
-    const aspect = renderer.domElement.width / renderer.domElement.height;
-    const near = 1;
-    const far = 1000;
-    const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+const getLights = (scene,table) => {
 
-    const R = 40
-    const theta = 0.25 * 2 * Math.PI / 4
-    camera.position.z = R * Math.cos(theta)
-    camera.position.y = -R * Math.sin(theta)
-    camera.lookAt(new THREE.Vector3(0, 0, 0))
-    scene.add(camera)
-    camera.updateProjectionMatrix()
-    const clock = new THREE.Clock()
-    camera.userData.render = () => {
-        const t = clock.getElapsedTime()
-        /*
-        const theta = (Math.sin(t/10 * 2*Math.PI)+1)/2 * 2 * Math.PI / 4
-        camera.position.z = R * Math.cos(theta)
-        camera.position.y = -R * Math.sin(theta)
-        camera.lookAt(new THREE.Vector3(0, 0, 0))
-        */
-    }
-
-    //camera.userData.controls = new THREE.OrbitControls(camera)
-    //camera.userData.controls.update();
-    return camera
-}
-
-const getScene = () => {
-    const scene = new THREE.Scene()
-    scene.background = new THREE.Color(0x000000)
-
-    scene.userData.get = name => scene.children.find( child => child.name === name)
-    scene.userData.add = (e,name) => {
-        scene.userData[name] = e
-        return scene
-    }
-
-    const clock = new THREE.Clock()
-    scene.userData.add(clock,'clock')
-
-    return scene
-}
-
-const getLights = scene => {
-
-    const table = scene.userData.table
     const t_w = table.mesh.geometry.parameters.width
     const t_h = table.mesh.geometry.parameters.height
 
@@ -64,7 +17,7 @@ const getLights = scene => {
     
     const definitions = [
         {
-            l: new THREE.AmbientLight(0xffffff, 0.5,100),
+            l: new THREE.AmbientLight(0xffffff, 1,1000),
             p: l => t => {l.position.set(0,0,t_h/2)},
         },
     ]
@@ -76,9 +29,34 @@ const getLights = scene => {
 
     lights.forEach( sl => scene.add(sl.light))
 
-    scene.userData.add(lights,'lights')
     return lights
 }
+
+const CameraModel = function () {
+
+    const material = new THREE.MeshStandardMaterial({
+        metalness: 0.8,
+        roughness: 0.8,
+        color: 0xaaaaaa,
+    })
+
+    const bodyGeom = new THREE.BoxGeometry(1,2,3)
+    const bodyMesh = new THREE.Mesh(bodyGeom,material)
+    bodyMesh.material.wireframe = true
+
+    const objGeom = new THREE.CylinderGeometry(0.6,0.4,0.5)
+    const objMesh = new THREE.Mesh(objGeom,material)
+    objMesh.rotateX(-Math.PI/2)
+    objMesh.position.set(0,0,-(0.5 + 2/2))
+    objMesh.material.wireframe = true
+
+
+    this.add(bodyMesh)
+    this.add(objMesh)
+
+}
+CameraModel.prototype = Object.create(new THREE.Group())
+
 
 window.addEventListener('load', event => {
 
@@ -89,28 +67,61 @@ window.addEventListener('load', event => {
     })
 
     const canvas = document.getElementById('cv1')
-    const touchManager = new TouchManager(canvas)
-    
-    const scene = getScene()
-    
-    const renderer = new THREE.WebGLRenderer({canvas,antialias: true});
-    renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);
-    renderer.setPixelRatio(devicePixelRatio)
+    //const touchManager = new TouchManager(canvas)
+    const sceneManager = new SceneManager(canvas)
 
-    const camera = getCamera(renderer,scene)
-    camera.name = 'SUBJECTIVE_CAMERA'
-    
-    const table = new Table(scene)
-    table.name = "TABLE"
-    scene.add(table.mesh);
-    scene.userData.add(table,"table")
+    sceneManager
+        .registerScene('main scene', scene => {
+            scene.background = new THREE.Color( 0xffffff );
+        })
+        .registerCamera('main camera',{
+            fov: 45,
+            scene: 'main scene',
+        }, camera => {
 
-    const lights = getLights(scene)
+            
+            camera.add(new CameraModel())
+
+            const R = 40
+            const theta = 0.25 * 2 * Math.PI / 4
+            camera.position.z = R * Math.cos(theta)
+            camera.position.y = -R * Math.sin(theta)
+            camera.lookAt(new THREE.Vector3(0, 0, 0))
+            camera.updateProjectionMatrix()
+
+        })
+
+        .registerCamera('side camera',{
+            fov: 45,
+            scene: 'main scene',
+        }, camera => {
+
+            camera.add(new CameraModel())
+
+            const R = 100
+            const theta = 0.25 * 2 * Math.PI / 4
+            const phi = 0.25 * 2 * Math.PI / 4
+            //camera.position.set(0,-R * Math.sin(theta), R * Math.cos(theta))
+            //camera.rotateX(-theta)
+            //camera.rotateZ(phi)
+            camera.position.set(R * Math.sin(theta) * Math.cos(phi),-R * Math.sin(theta) * Math.sin(phi), R * Math.cos(theta))
+            camera.lookAt(new THREE.Vector3(0, 0, 0))
+            //camera.lookAt(sceneManager.getCamera('main camera').position)
+            camera.updateProjectionMatrix()
+        })
+
+
+    const table = new Table(sceneManager.getCamera('main camera'))
+    sceneManager.getScene('main scene').add(table);
+
+    const lights = getLights(sceneManager.getScene('main scene'), table)
     
+    
+    
+    /*
     const cardsInGame = new Deck(socket,scene)
     const userManager = new UserManager(socket,scene)
     const raycaster = new THREE.Raycaster();
-    scene.userData.add(raycaster,'raycaster')
 
     const regions = [new Region(scene, 5/8,7/2)]
     regions.forEach (region => region.update({pos: [0.5,0.5]}))
@@ -204,16 +215,27 @@ window.addEventListener('load', event => {
 
 
     })
+    */
 
-    const animate = function () {
-        requestAnimationFrame(animate);
+    document.addEventListener('keypress', event => {
+        if (event.key == 1) {
+            sceneManager.selectCamera('main camera')
+        } else if (event.key == 2) {
+            sceneManager.selectCamera('side camera')
+        }
+    })
+
+    sceneManager.registerStep('update things', function (t) {
         //camera.userData.controls.update();
         lights.render()
         table.render()
-        userManager.render()
-        camera.userData.render()
-        renderer.render(scene, camera);
-    };
+        //userManager.render()
+        //camera.userData.render()
+    })
 
-    animate();
+
+    sceneManager.schedule = [ 'update things']
+
+    sceneManager.start()
+
 });

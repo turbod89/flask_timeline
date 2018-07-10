@@ -2,7 +2,7 @@ const User = function (socket,scene) {
 
     const avatar = {}
     const table = scene.userData.table
-    const camera = scene.userData.get('SUBJECTIVE_CAMERA')
+    const camera = scene.camera
     const w = 2, h = 2, f_w = 0.2, f_d = 0.1
 
     avatar.texture = new THREE.Texture()

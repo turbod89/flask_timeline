@@ -1,6 +1,5 @@
-Table = function (scene) {
+Table = function (camera) {
 
-    const camera = scene.userData.get('SUBJECTIVE_CAMERA')
     const R = camera.position.length()
     const h = 2 * R / 3
     const w = 1.618 * h
@@ -10,7 +9,10 @@ Table = function (scene) {
         metalness: 0.8,
         roughness: 0.8,
     });
-    const mesh = new THREE.Mesh(geometry, material);
+
+    THREE.Mesh.call(this,geometry,material)
+
+    const mesh = this//new THREE.Mesh(geometry, material);
     mesh.position.z = -1
 
     this.mesh = mesh
@@ -59,3 +61,5 @@ Table = function (scene) {
 
     return this
 }
+
+Table.prototype = Object.create(THREE.Mesh.prototype)

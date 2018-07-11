@@ -1,5 +1,7 @@
 const Card = function Card(socket,scene,w,h) {
 
+    THREE.Group.apply(this);
+
     const card = this
     const table = scene.userData.table
 
@@ -61,6 +63,7 @@ const Card = function Card(socket,scene,w,h) {
     card.holdInfo = {}
     return card
 }
+Card.prototype = Object.create(THREE.Group)
 
 
 

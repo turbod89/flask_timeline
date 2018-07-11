@@ -32,18 +32,15 @@ Table = function (camera) {
     });
 
     const mesh = new THREE.Mesh(geometry, material);
-    mesh.position.z = -1
+    mesh.position.z = -0.1
     this.add(mesh)
 
-    const sphere_bGeometry = new THREE.SphereBufferGeometry(0.25, 16, 8)
     
     const lightDefinitions = [
         {
             light: new THREE.PointLight(0xffaaaa, 0.9, 100),
-            render: l => t => l.position.set(0.90 * w / 2, 0.90 * h / 2,
-                h/5 + h/16 * Math.sin(t / 15 * 2 * Math.PI)),
+            render: l => t => l.position.set(0.90 * w / 2, 0.90 * h / 2, h/5 + h/16 * Math.sin(t / 15 * 2 * Math.PI)),
         },
-        
         {
             light: new THREE.PointLight(0xaaffaa, 0.9, 100),
             render: l => t => l.position.set(-0.90 * w / 2, 0.90 * h / 2, h / 5 + h / 16 * Math.sin((0.25 + t / 15) * 2 * Math.PI)),
@@ -56,22 +53,25 @@ Table = function (camera) {
         },
         
     ]
-
-    const lamps = lightDefinitions.map(ls => {
+        
+    //const sphere_bGeometry = new THREE.SphereBufferGeometry(0.25, 16, 8)
+    lightDefinitions.forEach(ls => {
+        /*
         const s = new THREE.Mesh(sphere_bGeometry, new THREE.MeshBasicMaterial({
             color: ls.light.color
         }))
         ls.light.add(s)
-        return s
+        */
+        this.add(ls.light)
+        ls.render(ls.light)(0)
     })
 
-    lightDefinitions.forEach(ld => this.add(ld.light))
-
-
     this.render = function (t) {
+        /*
         lightDefinitions.forEach( ld => {
             ld.render(ld.light)(t)
         })
+        */
     }
 
     console.log(this)

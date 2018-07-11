@@ -20,6 +20,7 @@ const SceneManager = function (canvas) {
         for (let name in cameras) {
             const camera = cameras[name]
             camera.aspect = renderer.domElement.width / renderer.domElement.height
+            camera.updateProjectionMatrix()
         }
     }
 

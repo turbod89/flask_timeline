@@ -60,14 +60,12 @@ window.addEventListener('load', event => {
             
             camera.add(new CameraModel(0xff0000))
 
-            const R = 20
-            const theta = 0.05 * 2 * Math.PI / 4
+            const R = 40
+            const theta = 0.00 * 2 * Math.PI / 4
             camera.position.z = R * Math.cos(theta)
             camera.position.y = -R * Math.sin(theta)
             camera.lookAt(new THREE.Vector3(0, 0, 0))
-            console.log(camera)
-            camera.updateProjectionMatrix()
-            camera.updateMatrix();
+            camera.orientation = camera.aspect < 1 ? 'portrait' : 'landscape'
             sceneManager.step()
 
 
@@ -75,8 +73,19 @@ window.addEventListener('load', event => {
 
     const table = new Table(sceneManager.getCamera('main camera'))
     sceneManager.getScene('main scene').add(table);
-    
+
     sceneManager
+        .registerCamera('rotated camera',{
+            fov: 45,
+            scene: 'main scene',
+        }, (camera,$) => {
+
+            camera.add(new CameraModel(0x00ff00))
+            camera.rotateZ(Math.PI/2)
+            camera.position.copy($.getCamera('main camera').position)
+            console.log(camera.position)
+
+        })
         .registerCamera('side camera',{
             fov: 45,
             scene: 'main scene',
@@ -84,7 +93,7 @@ window.addEventListener('load', event => {
 
             camera.add(new CameraModel())
 
-            const R = 50
+            const R = 100
             const theta = 0.25 * 2 * Math.PI / 4
             const phi = 1 * 2 * Math.PI / 4
             //camera.position.set(0,0,5)
@@ -117,7 +126,7 @@ window.addEventListener('load', event => {
             //camera.lookAt(table.position)
             camera.updateProjectionMatrix()
         })
-
+    
     const lights = getLights(sceneManager.getScene('main scene'), table)
     sceneManager.registerStep('update things', function (t) {
         //camera.userData.controls.update();
@@ -159,9 +168,22 @@ window.addEventListener('load', event => {
 
     document.addEventListener('keypress', event => {
         const cameras = sceneManager.getCameras()
-        const index = ['1', '2', '3', '4', '5', '6', '7', '8', '9'].findIndex(key => event.key === key)
+        const index = '123456789'.split('').findIndex(key => event.key === key)
         if (index >= 0) {
             sceneManager.selectCamera(cameras[index])
+        }
+    })
+
+    window.addEventListener('resize', event => {
+        const aspect = canvas.offsetWidth/canvas.offsetHeight
+        const camera = sceneManager.getCamera('main camera')
+        
+        if (aspect <= 1 && camera.orientation === 'landscape') {
+            camera.orientation = 'portrait'
+            camera.rotateZ(-Math.PI/2)
+        } else if (aspect >= 1 && camera.orientation === 'portrait') {
+            camera.orientation = 'landscape'
+            camera.rotateZ(Math.PI/2)
         }
     })
 

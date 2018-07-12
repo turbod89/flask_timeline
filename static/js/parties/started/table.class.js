@@ -25,10 +25,16 @@ Table = function (camera) {
     this.width = w
     this.height = h
 
-    const geometry = new THREE.BoxGeometry(w,h, 1);
-    const material = new THREE.MeshStandardMaterial({
-        metalness: 0.8,
-        roughness: 0.8,
+    const texture = new THREE.TextureLoader().load( "/static/img/textures/table.jpg" );
+    //const texture = new THREE.TextureLoader().load( "/static/img/textures/template.png" );
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set( 1, 1 );
+    const geometry = new THREE.PlaneGeometry(w,h);
+    const material = new THREE.MeshToonMaterial({
+        map: texture,
+        normalMap: texture,
+        specularMap: texture,
     });
 
     const mesh = new THREE.Mesh(geometry, material);

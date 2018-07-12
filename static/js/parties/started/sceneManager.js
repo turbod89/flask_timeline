@@ -104,6 +104,13 @@ const SceneManager = function (canvas) {
             }
         },
 
+        'getCurrentScene': {
+            enumerable: false,
+            value: function () {
+                return secenes[selectedScene]
+            }
+        },
+
         'getScenes': {
             enumerable: false,
             value: function (name) {
@@ -115,6 +122,13 @@ const SceneManager = function (canvas) {
             enumerable: false,
             value: function (name) {
                 return cameras[name]
+            }
+        },
+
+        'getCurrentCamera': {
+            enumerable: false,
+            value: function () {
+                return cameras[selectedCamera]
             }
         },
 

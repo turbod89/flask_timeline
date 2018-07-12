@@ -80,7 +80,6 @@ Table = function (camera) {
         */
     }
 
-    console.log(this)
     return this
 }
 

@@ -35,7 +35,6 @@ const getLights = (scene,table) => {
     return lights
 }
 
-
 window.addEventListener('load', event => {
 
     const socket = io.connect('http://' + document.domain + ':' + location.port + '/party');
@@ -45,7 +44,6 @@ window.addEventListener('load', event => {
     })
 
     const canvas = document.getElementById('cv1')
-    //const touchManager = new TouchManager(canvas)
     const sceneManager = new SceneManager(canvas)
 
     sceneManager
@@ -128,6 +126,8 @@ window.addEventListener('load', event => {
         })
     
     const lights = getLights(sceneManager.getScene('main scene'), table)
+    const cardManager = new CardManager(socket, sceneManager.getScene('main scene'), table)
+
     sceneManager.registerStep('update things', function (t) {
         //camera.userData.controls.update();
         lights.render(t)
@@ -137,34 +137,7 @@ window.addEventListener('load', event => {
     })
 
     sceneManager.schedule = [ 'update things']
-
-    const raycasters = [{x: 1, y:1},{x: 1, y:-1},{x: -1, y:1},{x: -1, y:-1}].map( point => {
-        const raycaster = new THREE.Raycaster()
-        raycaster.setFromCamera(point,sceneManager.getCamera('main camera'))
-        var pointA = raycaster.ray.origin
-        var direction = raycaster.ray.direction
-        direction.normalize();
-    
-        var lambda = - pointA.z/direction.z;
-        if (lambda < 0) {
-            lambda = 100
-        }
-    
-        var pointB = new THREE.Vector3();
-        pointB.addVectors(pointA, direction.multiplyScalar(lambda));
-    
-        var geometry = new THREE.Geometry();
-        geometry.vertices.push(pointA);
-        geometry.vertices.push(pointB);
-        var material = new THREE.LineBasicMaterial({
-            color: 0xff0000
-        });
-        var line = new THREE.Line(geometry, material);
-        sceneManager.getScene('main scene').add(line);
-        return raycaster
-
-    })
-   
+       
 
     document.addEventListener('keypress', event => {
         const cameras = sceneManager.getCameras()
@@ -185,6 +158,63 @@ window.addEventListener('load', event => {
             camera.orientation = 'landscape'
             camera.rotateZ(Math.PI/2)
         }
+    })
+
+    const touchManager = new TouchManager(canvas)
+    const raycaster = new THREE.Raycaster()
+
+    const toScreenCoordinates = pos => ({
+        x: (pos[0] / canvas.width) * 2 - 1,
+        y: -(pos[1] / canvas.height) * 2 + 1,
+    })
+
+    touchManager.addEventListener('update', function (touch) {
+        // calculate mouse position in normalized device coordinates
+        // (-1 to +1) for both components
+
+        const touchPoint = toScreenCoordinates(touch.pos)
+
+        raycaster.setFromCamera(touchPoint, sceneManager.getCurrentCamera());
+        const intersects = raycaster.intersectObject(table,true);
+        console.log(intersects)
+        if (intersects.length > 0) {
+            const point = intersects[0].point
+            console.log(touch.cards)
+            touch.cards.forEach((card, i) => {
+                i > 0 || card.moveTo(point, table)
+            })
+
+        }
+
+
+    })
+
+    touchManager.addEventListener('add', function (touch) {
+        const touchPoint = toScreenCoordinates(touch.pos)
+        raycaster.setFromCamera(touchPoint, sceneManager.getCurrentCamera())
+        touch.cards = cardManager.intersectCards(raycaster);
+    })
+
+    touchManager.addEventListener('remove', function (touch) {
+        
+        const touchPoint = toScreenCoordinates(touch.pos)
+
+        if (touch.cards.length > 0) {
+            raycaster.setFromCamera(touchPoint, sceneManager.getCurrentCamera())
+            const intersectedRegions = []
+
+            if (intersectedRegions.length > 0) {
+                
+            } else {
+                touch.cards.forEach(card => {
+                    card.moveTo(card.position)
+                    card.emitPosition()
+                })
+            }
+        }
+
+
+
     })
 
     sceneManager.start()

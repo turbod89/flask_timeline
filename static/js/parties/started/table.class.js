@@ -32,7 +32,7 @@ Table = function (camera) {
     texture.wrapT = THREE.RepeatWrapping;
     texture.repeat.set( 1, 1 );
     const geometry = new THREE.PlaneGeometry(w,h);
-    const material = new THREE.MeshToonMaterial({
+    const material = new THREE.MeshBasicMaterial({
         map: texture,
         normalMap: texture,
         specularMap: texture,

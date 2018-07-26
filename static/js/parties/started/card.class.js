@@ -1,4 +1,4 @@
-const Card = function Card(socket,scene,w,h) {
+const Card = function Card(socket,scene) {
 
     
     const card = this
@@ -18,8 +18,8 @@ const Card = function Card(socket,scene,w,h) {
         specularMap: texture,
     });
     
-    const geometry = new THREE.PlaneGeometry(w, h)
-    THREE.Mesh.apply(this,[geometry,material]);
+    Card.geometry.scale(2,2,2)
+    THREE.Mesh.apply(this,[Card.geometry,material]);
     
     card.moveTo = function (point) {
         card.position.x = point.x
@@ -57,6 +57,31 @@ const Card = function Card(socket,scene,w,h) {
 }
 Card.prototype = Object.create(THREE.Mesh.prototype)
 
+Card.geometry = new THREE.PlaneGeometry(1,1)
+Card.modelLoader = new THREE.BufferGeometryLoader();
+
+// load a resource
+Card.modelLoader.load(
+	// resource URL
+	'/static/models/card.geometry.json',
+
+	// onLoad callback
+	function ( geometry ) {
+        console.log('Card geometry loaded')
+		Card.geometry = geometry
+	},
+
+	// onProgress callback
+	function ( xhr ) {
+		console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
+	},
+
+	// onError callback
+	function( err ) {
+		console.log( 'An error happened' );
+	}
+);
+
 
 
 const CardManager = function CardManager(socket,scene,table) {
@@ -74,7 +99,7 @@ const CardManager = function CardManager(socket,scene,table) {
             if (index < 0) {
                 someHasChanged = true
 
-                const card = new Card(socket,scene,5/2,7/2)
+                const card = new Card(socket,scene)
                 card.update(cardData,table)
                 this.cards.push(card)
                 scene.add(card)

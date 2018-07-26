@@ -17,7 +17,7 @@ const getLights = (scene,table) => {
     
     const definitions = [
         {
-            l: new THREE.PointLight(0xffffff, 0.5,100),
+            l: new THREE.PointLight(0xffffff, 0.9,100),
             p: l => t => {l.position.set(0,0,table.height/2)},
         },
     ]
@@ -56,7 +56,7 @@ window.addEventListener('load', event => {
         }, camera => {
 
             
-            camera.add(new CameraModel(0xff0000))
+            //camera.add(new CameraModel(0xff0000))
 
             const R = 40
             const theta = 0.00 * 2 * Math.PI / 4
@@ -78,7 +78,7 @@ window.addEventListener('load', event => {
             scene: 'main scene',
         }, (camera,$) => {
 
-            camera.add(new CameraModel(0x00ff00))
+            //camera.add(new CameraModel(0x00ff00))
             camera.rotateZ(Math.PI/2)
             camera.position.copy($.getCamera('main camera').position)
             console.log(camera.position)
@@ -89,7 +89,7 @@ window.addEventListener('load', event => {
             scene: 'main scene',
         }, camera => {
 
-            camera.add(new CameraModel())
+            //camera.add(new CameraModel())
 
             const R = 100
             const theta = 0.25 * 2 * Math.PI / 4
@@ -110,7 +110,7 @@ window.addEventListener('load', event => {
             scene: 'main scene',
         }, camera => {
 
-            camera.add(new CameraModel(0x0000ff))
+            //camera.add(new CameraModel(0x0000ff))
 
             const R = 15
             const theta = 0.75 * 2 * Math.PI / 4

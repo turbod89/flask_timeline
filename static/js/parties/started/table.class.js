@@ -25,7 +25,8 @@ Table = function (camera) {
     this.width = w
     this.height = h
 
-    const texture = new THREE.TextureLoader().load( "/static/img/textures/table.jpg" );
+    const texture = new THREE.TextureLoader().load( "http://i.imgur.com/rw5TP20.jpg" );
+    //const texture = new THREE.TextureLoader().load( "/static/img/textures/table.jpg" );
     //const texture = new THREE.TextureLoader().load( "/static/img/textures/template.png" );
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
@@ -42,7 +43,7 @@ Table = function (camera) {
     this.add(mesh)
 
     
-    const lightDefinitions = [
+    const lightDefinitions = ([
         {
             light: new THREE.PointLight(0xffaaaa, 0.9, 100),
             render: l => t => l.position.set(0.90 * w / 2, 0.90 * h / 2, h/5 + h/16 * Math.sin(t / 15 * 2 * Math.PI)),
@@ -58,7 +59,7 @@ Table = function (camera) {
             render: l => t => l.position.set(-0.90 * w / 2, -0.90 * h / 2, h / 5 + h / 16 * Math.sin((0.75 + t / 15) * 2 * Math.PI)),
         },
         
-    ]
+    ],[])
         
     //const sphere_bGeometry = new THREE.SphereBufferGeometry(0.25, 16, 8)
     lightDefinitions.forEach(ls => {

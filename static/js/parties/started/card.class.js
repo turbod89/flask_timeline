@@ -41,11 +41,13 @@ const Card = function Card(socket,scene) {
         card.id = data.id
         card.title = data.title
 
-        context.fillStyle = 'white'
+        context.fillStyle = 'purple'
         context.fillRect(0,0,128,128)
         context.fillStyle = 'black'
         context.font = '24px arial'
-        context.fillText(card.title,4,64)
+        context.textBaseline = 'middle'
+        const width = context.measureText(card.title).width
+        context.fillText(card.title,64-width/2,64)
 
         card.moveable = card.moveable || true
         card.year = card.year || null

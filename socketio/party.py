@@ -57,6 +57,7 @@ class Party(Namespace):
                 'id': card.id,
                 'name': card.name,
                 'title': card.name,
+                'year': card.year,
                 'pos': [
                     (cnt+1)/(n+1),
                     0.5,
@@ -65,6 +66,30 @@ class Party(Namespace):
             cnt = cnt + 1
 
         self.emit('cards_in_game',data,room=room['token'])
+
+    def emitHandCards(self,room):
+        print('emit hand cards')
+        party = room['party']
+
+        data = []
+        for user in party.participants:
+            cards = party.getHand(user)
+            cardsData = []
+            for card in cards:
+                cardsData.append({
+                    'id': card.id,
+                    'name': card.name,
+                    'title': card.name,
+                })
+            data.append({
+                'player': {
+                    'id': user.id
+                },
+                'cards': cardsData,
+            })
+
+
+        self.emit('cards_in_hands', data,room = room['token'])
 
     def getRoom(self, token):
 
@@ -176,7 +201,7 @@ class Party(Namespace):
             self.addUserToRoom(g.me,room)
             self.emitUsers(room)
             self.emitTableCards(room)
-
+            self.emitHandCards(room)
         
         
 

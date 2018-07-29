@@ -131,4 +131,8 @@ const CardManager = function CardManager(socket,scene,table) {
         deck.refresh(data)
     })
 
+    socket.on('cards_in_hands', function (data) {
+        console.log(data)
+    })
+
 }

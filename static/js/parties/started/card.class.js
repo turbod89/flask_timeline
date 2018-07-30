@@ -1,7 +1,6 @@
 const Card = function Card(socket, scene) {
 
     const card = this
-    const table = scene.userData.table
 
     const canvas = document.createElement('canvas')
     const context = canvas.getContext('2d')
@@ -24,16 +23,6 @@ const Card = function Card(socket, scene) {
         card.position.y = point.y
     }
 
-    card.emitPosition = function () {
-        socket.emit('update_card', {
-            id: card.id,
-            pos: [
-                (card.position.x / table.width) + 0.5,
-                (card.position.y / table.height) + 0.5,
-            ],
-        })
-    }
-
     card.update = function (data, table) {
 
         card.id = data.id
@@ -50,8 +39,6 @@ const Card = function Card(socket, scene) {
         card.moveable = card.moveable || true
         card.year = card.year || null
 
-        card.position.x = (data.pos[0] - 0.5) * table.width
-        card.position.y = (data.pos[1] - 0.5) * table.height
     }
 
 }
@@ -89,27 +76,35 @@ const CardManager = function CardManager(socket, me, scene, table) {
     console.log(me);
 
     const deck = this;
-    this.cards = [];
+    this.allCards = [];
+    this.tableCards = [];
+    this.handCards = [];
 
     this.refresh = function (cardsData) {
         let someHasChanged = false;
 
         // any new card has changed or has been created
         cardsData.forEach(cardData => {
-            const index = this.cards.findIndex(oldCard => cardData.id === oldCard.id);
+            const index = this.allCards.findIndex(oldCard => cardData.id === oldCard.id);
 
             if (index < 0) {
                 someHasChanged = true;
 
                 const card = new Card(socket, scene);
                 card.update(cardData, table);
-                this.cards.push(card);
                 scene.add(card);
                 console.log(card);
 
+                this.allCards.push(card);
+                if (cardData.place === 'table') {
+                    this.tableCards.push(card);
+                } else if (cardData.place === 'hand') {
+                    this.handCards.push(card);
+                }
+
 
             } else {
-                const card = this.cards[index];
+                const card = this.allCards[index];
                 card.update(cardData, table);
 
 
@@ -118,21 +113,39 @@ const CardManager = function CardManager(socket, me, scene, table) {
 
         if (someHasChanged) {
             this.redraw();
+
+            this.tableCards.forEach ( (card,i) => card.moveTo({
+                x: table.width > table.height ? (i+1) *table.width / (this.tableCards.length + 1) : table.width/2,
+                y: table.width > table.height ? table.height/2 : (i+1) *table.height / (this.tableCards.length + 1),
+            }))
+
+            this.handCards.forEach((card, i) => card.moveTo({
+                x: table.width > table.height ? (i + 1) * table.width / (this.tableCards.length + 1) : table.width / 3,
+                y: table.width > table.height ? table.height / 3 : (i + 1) * table.height / (this.tableCards.length + 1),
+            }))
+
+            conosole.log(this.tableCards,this.handCards)
         }
     }
 
-    this.redraw = function () {};
+    this.redraw = function () {
+
+    };
 
     this.intersectCards = function (raycaster) {
         return raycaster.intersectObjects(this.cards).map(a => a.object);
     };
 
     socket.on('cards_in_game', function (data) {
+        data.forEach(cardData => cardData.place = 'table');
         deck.refresh(data);
     });
 
     socket.on('cards_in_hands', function (data) {
-        console.log(data);
+        data.forEach(user => {
+            user.cards.forEach( cardData => cardData.place = 'hand')
+            deck.refresh(user.cards)
+        });
     });
 
 }

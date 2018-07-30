@@ -126,7 +126,7 @@ window.addEventListener('load', event => {
         })
     
     const lights = getLights(sceneManager.getScene('main scene'), table)
-    const cardManager = new CardManager(socket, sceneManager.getScene('main scene'), table)
+    const cardManager = new CardManager(socket,g.me, sceneManager.getScene('main scene'), table)
 
     sceneManager.registerStep('update things', function (t) {
         //camera.userData.controls.update();

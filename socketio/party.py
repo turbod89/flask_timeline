@@ -73,7 +73,7 @@ class Party(Namespace):
 
         data = []
         for user in party.participants:
-            cards = party.getHand(user)
+            cards = party.getHand(user).getCards()
             cardsData = []
             for card in cards:
                 cardsData.append({

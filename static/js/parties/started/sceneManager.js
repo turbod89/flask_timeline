@@ -1,10 +1,18 @@
-const SceneManager = function (canvas) {
+const SceneManager = function (canvas = null) {
 
     const clock = new THREE.Clock()
     const scenes = {}
     const cameras = {}
     const steps = {}
-    const renderer = new THREE.WebGLRenderer({canvas,antialias: true});
+    const renderer = canvas === null ?
+            new THREE.WebGLRenderer({antialias: true})
+        :
+            new THREE.WebGLRenderer({canvas,antialias: true});
+
+    if (canvas === null) {
+        canvas = renderer.domElement
+        document.body.appendChild(canvas)
+    }
     
     let status = 0
     let selectedScene = null
@@ -12,9 +20,9 @@ const SceneManager = function (canvas) {
     
     this.schedule = []
 
-    const resize = function (event) {
+    const resize = function () {
 
-        renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);
+        renderer.setSize(renderer.domElement.offsetWidth, renderer.domElement.offsetHeight);
         renderer.setPixelRatio(devicePixelRatio)
 
         for (let name in cameras) {
@@ -81,6 +89,7 @@ const SceneManager = function (canvas) {
                 const {fov = 50, aspect = renderer.domElement.width / renderer.domElement.height, near = 1, far = 1000, scene = selectedScene} = options
                 
                 cameras[name] = new THREE.PerspectiveCamera(fov,aspect,near,far)
+                cameras[name]['name'] = name
 
                 if (scene in scenes) {
                     scenes[scene].add(cameras[name])
@@ -107,7 +116,7 @@ const SceneManager = function (canvas) {
         'getCurrentScene': {
             enumerable: false,
             value: function () {
-                return secenes[selectedScene]
+                return scenes[selectedScene]
             }
         },
 
@@ -193,6 +202,6 @@ const SceneManager = function (canvas) {
 
 
     resize()
-    window.addEventListener('resize', resize)
+    window.addEventListener('resize', resize,false)
 
 }

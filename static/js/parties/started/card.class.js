@@ -113,27 +113,32 @@ const CardManager = function CardManager(socket, me, scene, table) {
 
         if (someHasChanged) {
             this.redraw();
-
-            this.tableCards.forEach ( (card,i) => card.moveTo({
-                x: table.width > table.height ? (i+1) *table.width / (this.tableCards.length + 1) : table.width/2,
-                y: table.width > table.height ? table.height/2 : (i+1) *table.height / (this.tableCards.length + 1),
-            }))
-
-            this.handCards.forEach((card, i) => card.moveTo({
-                x: table.width > table.height ? (i + 1) * table.width / (this.tableCards.length + 1) : table.width / 3,
-                y: table.width > table.height ? table.height / 3 : (i + 1) * table.height / (this.tableCards.length + 1),
-            }))
-
-            conosole.log(this.tableCards,this.handCards)
         }
     }
 
     this.redraw = function () {
+        this.tableCards.forEach ( (card,i) => card.moveTo({
+            x: table.width > table.height ?
+                ((i + 1) / (this.tableCards.length + 1) -0.5) * table.width
+                : 0,
+            y: table.width > table.height ?
+                0
+                : ((i + 1) / (this.tableCards.length + 1) - 0.5) * table.height,
+        }))
 
+        this.handCards.forEach((card, i) => card.moveTo({
+            x: table.width > table.height ?
+                ((i + 1) / (this.handCards.length + 1) -0.5) * table.width
+                : table.width / 6,
+
+            y: table.width > table.height ?
+                table.height / 6
+                : ((i + 1) / (this.handCards.length + 1) - 0.5) * table.height,
+        }))
     };
 
     this.intersectCards = function (raycaster) {
-        return raycaster.intersectObjects(this.cards).map(a => a.object);
+        return raycaster.intersectObjects(this.allCards).map(a => a.object);
     };
 
     socket.on('cards_in_game', function (data) {

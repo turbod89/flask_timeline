@@ -90,6 +90,7 @@ window.addEventListener('load', event => {
     
     const lightManager = new LightManager();
     const cardManager = new CardManager(socket,g.me, sceneManager.getScene('main scene'), table)
+    window.cardManager = cardManager
     
     lightManager.setLights(sceneManager.getScene('main scene'), table);
 

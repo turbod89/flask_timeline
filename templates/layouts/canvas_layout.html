@@ -18,6 +18,14 @@
     {% block globalJs %}
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script>
+        (function () {
+            const canvas = document.getElementById('cv1');
+            if (canvas.requestFullscreen) {
+                canvas.requestFullscreen();
+            }
+        })()
+    </script>
     <script src="{{ url_for('static', filename='jquery-3.3.1.min.js') }}"></script>
     <script src="{{ url_for('static', filename='bootstrap/popper.min.js') }}"></script>
     <script src="{{ url_for('static', filename='bootstrap/bootstrap.min.js') }}"></script>

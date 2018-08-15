@@ -11,10 +11,7 @@ const Region = function region(scene,w,h) {
     });
 
     const geometry = new THREE.PlaneGeometry(w, h)
-
-    const mesh = new THREE.Mesh(geometry, material)
-    mesh.region = region
-    region.mesh = mesh
+    THREE.Mesh.apply(this, [geometry, material]);
 
     region.mesh.position.z = -0.1
 
@@ -26,3 +23,5 @@ const Region = function region(scene,w,h) {
     
     return region
 }
+
+Region.prototype = Object.create(THREE.Mesh.prototype)

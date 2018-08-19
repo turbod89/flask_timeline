@@ -22,7 +22,7 @@ class Party(Base):
     __tablename__ = 'parties'
 
     STATE_CREATED = 0
-    STATE_STARTED = 1
+    STATE_READY = 1
     STATE_FINISHED = 2
 
     ERROR_OK = 0
@@ -88,12 +88,12 @@ class Party(Base):
         return len(self.participants)
 
     def start(self):
-        if self.status >= self.STATE_STARTED:
+        if self.status >= self.STATE_READY:
             return self.ERROR_UNKNOW
         elif len(self) < 2:
             return self.ERROR_UNKNOW
         else:
-            self.status = self.STATE_STARTED
+            self.status = self.STATE_READY
             self.dealer = 0
             # shuffle cards
             self.mainDeck.shuffle()
@@ -150,7 +150,7 @@ class Party(Base):
     def getStateDesc(self):
         if self.status == self.STATE_CREATED:
             return "Game created, just waiting to start"
-        elif self.status == self.STATE_STARTED:
+        elif self.status == self.STATE_READY:
             return "Game started, playing"
         elif self.status == self.STATE_FINISHED:
             return "Game finished"
@@ -165,6 +165,7 @@ class Party(Base):
 
     def getHand(self,user):
         index = self.participants.index(user)
+        print(index)
 
         if type(index) == int:
             return self.userDecks[index]
@@ -178,7 +179,7 @@ class Party(Base):
 
     def _updateState(self):
 
-        if self.getState() == self.STATE_STARTED:
+        if self.getState() == self.STATE_READY:
             for i in range(len(self.participants)):
                 if len(self.userDecks[i]) == 0:
 
@@ -199,7 +200,7 @@ class Party(Base):
 
     def placeCard(self,card,position):
         
-        if self.getState() == self.STATE_STARTED:
+        if self.getState() == self.STATE_READY:
             dealer = self.getDealer()
             hand = self.getHand(dealer)
             tokenCard = hand.takeCard(card)
@@ -254,7 +255,7 @@ class Party(Base):
                 user = self.participants[i]
                 print ('\t%i. %s' % (i,str(user)))
 
-        elif self.getState() == self.STATE_STARTED:
+        elif self.getState() == self.STATE_READY:
             for i in range(len(self.participants)):
                 user = self.participants[i]
                 userDeck = self.userDecks[i]

@@ -100,7 +100,7 @@ def generate(app,db):
         party = models.party.Party()
         num_players = random.randint(2,4)
         status = models.party.Party.STATE_CREATED if random.random() > 0.3 else (
-            models.party.Party.STATE_STARTED if random.random() > 0.3 else models.party.Party.STATE_FINISHED)
+            models.party.Party.STATE_READY if random.random() > 0.3 else models.party.Party.STATE_FINISHED)
         players = random.sample(users,num_players)
         owner = random.sample(players,1)[0]
         name  = '%s\'s party #%i' % (owner.profile.first_name, i+1)

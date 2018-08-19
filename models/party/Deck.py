@@ -17,7 +17,8 @@ class Deck(Base):
         return "<Deck(id='%s',name='%s')>" % (self.id, self.name)
 
     def __str__(self):
-        return "%s (%s)" % (self.name, str(self.id))
+        return ('%s(%i): ' % (self.name, len(self)))+', '.join([str(card) for card in self.cards])
+        #return "%s (%s)" % (self.name, str(self.id))
 
     def serialize(self):
         obj = super(Deck, self).serialize()

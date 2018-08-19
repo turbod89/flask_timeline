@@ -25,7 +25,7 @@ const Card = function Card(socket, scene) {
 
     card.update = function (data, table) {
 
-        card.id = data.id
+        card.card_id = data.id
         card.title = data.title
 
         context.fillStyle = 'purple'
@@ -73,8 +73,7 @@ Card.modelLoader.load(
 
 
 const CardManager = function CardManager(socket, me, scene, table) {
-    console.log(me);
-
+    
     const deck = this;
     this.allCards = [];
     this.tableCards = [];
@@ -85,15 +84,15 @@ const CardManager = function CardManager(socket, me, scene, table) {
 
         // any new card has changed or has been created
         cardsData.forEach(cardData => {
-            const index = this.allCards.findIndex(oldCard => cardData.id === oldCard.id);
+            const index = this.allCards.findIndex(oldCard => cardData.id === oldCard.card_id);
 
             if (index < 0) {
+
                 someHasChanged = true;
 
                 const card = new Card(socket, scene);
                 card.update(cardData, table);
                 scene.add(card);
-                console.log(card);
 
                 this.allCards.push(card);
                 if (cardData.place === 'table') {

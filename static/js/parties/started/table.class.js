@@ -33,7 +33,7 @@ Table = function (camera) {
     texture.repeat.set( 1, 1 );
     const geometry = new THREE.PlaneGeometry(w,h);
     const material = new THREE.MeshBasicMaterial({
-        map: texture,
+        //map: texture,
         normalMap: texture,
         specularMap: texture,
     });

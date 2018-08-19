@@ -60,13 +60,18 @@
     }
 </script>
 <script>
+
+    const PARTY_STATE_CREATED = 0;
+    const PARTY_STATE_READY = 1;
+    const PARTY_STATE_FINISHED = 2;
+
     const partyListItem = party => {
 
         const participant_index = party.participants.findIndex(p => p.id == g.me.id)
         const actionButtons = []
         let me = null
 
-        if (party.status === 0 && party.participants.length < 4 && participant_index < 0) {
+        if (party.status === PARTY_STATE_CREATED && party.participants.length < 4 && participant_index < 0) {
             actionButtons.push(
                 toDom(['button',{'class': 'btn btn-outline-primary'}, 
                     ['i',{'class':'fa fa-plus'}],
@@ -96,7 +101,16 @@
             )
         }
         
-        if (party.status === 0 && party.participants.length > 1 && participant_index >= 0 && party.owner.id != g.me.id) {
+        if (party.status === PARTY_STATE_CREATED && party.participants.length > 1 && participant_index >= 0 && party.owner.id == g.me.id) {
+            actionButtons.push(
+                toDom(['a',{'class': 'btn btn-outline-primary',href: party.url},
+                    ['i',{'class':'fa fa-eye'}],
+                    ' Start',
+                ])
+            )
+        }
+        
+        if (party.status === PARTY_STATE_CREATED && party.participants.length > 1 && participant_index >= 0 && party.owner.id != g.me.id) {
             actionButtons.push(
                 toDom(['button',{'class': 'btn btn-outline-danger'}, 
                     ['i',{'class':'fa fa-minus'}],
@@ -127,12 +141,20 @@
             )
         }
         
-        
-        if (party.status === 1) {
+        if (party.status === PARTY_STATE_READY && participant_index < 0) {
             actionButtons.push(
                 toDom(['a',{'class': 'btn btn-outline-primary',href: party.url}, 
                     ['i',{'class':'fa fa-eye'}],
                     ' Watch',
+                ])
+            )
+        }
+
+        if (party.status === PARTY_STATE_READY && participant_index >= 0) {
+            actionButtons.push(
+                toDom(['a',{'class': 'btn btn-outline-primary',href: party.url}, 
+                    ['i',{'class':'fa fa-play'}],
+                    ' Resume',
                 ])
             )
         }

@@ -32,7 +32,7 @@ def append(bp,bp_api):
 
         if request.method == 'GET':
             
-            parties = models.party.Party.query.filter(models.party.Party.status.in_((models.party.Party.STATE_CREATED, models.party.Party.STATE_STARTED,))).all()
+            parties = models.party.Party.query.filter(models.party.Party.status.in_((models.party.Party.STATE_CREATED, models.party.Party.STATE_READY,))).all()
             parties_json = [party.serialize() for party in parties]
 
             for party_dict in parties_json:

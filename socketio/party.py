@@ -88,7 +88,7 @@ class Party(Namespace):
                 'cards': cardsData,
             })
 
-
+        party.print()
         self.emit('cards_in_hands', data,room = room['token'])
 
     def getRoom(self, token):
@@ -101,9 +101,12 @@ class Party(Namespace):
                 'party': models.party.Party.query.filter_by(code = token).first()
             }
 
-            if self.rooms[token]['party'].status == models.party.Party.STATE_STARTED:
+
+            if 'party_status' not in self.rooms[token] or self.rooms[token]['party_status'] != 'started':
+                self.rooms[token]['party_status'] = 'started'
                 self.rooms[token]['party'].status = models.party.Party.STATE_CREATED
                 self.rooms[token]['party'].start()
+                print ('Party started!')
 
         return self.rooms[token]
 

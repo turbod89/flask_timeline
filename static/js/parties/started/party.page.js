@@ -90,7 +90,6 @@ window.addEventListener('load', event => {
     
     const lightManager = new LightManager();
     const cardManager = new CardManager(socket,g.me, sceneManager.getScene('main scene'), table)
-    window.cardManager = cardManager
     
     lightManager.setLights(sceneManager.getScene('main scene'), table);
 
@@ -145,7 +144,7 @@ window.addEventListener('load', event => {
         if (intersects.length > 0) {
             const point = intersects[0].point
             touch.cards.forEach((card, i) => {
-                i > 0 || card.moveTo(point, table)
+                i > 0 || card.user_id !== g.me.id || card.moveTo(point, table)
             })
 
         }

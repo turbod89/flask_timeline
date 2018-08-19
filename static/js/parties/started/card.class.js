@@ -28,7 +28,9 @@ const Card = function Card(socket, scene) {
         card.card_id = data.id
         card.title = data.title
 
-        context.fillStyle = 'purple'
+        card.user_id = data.user_id || null
+
+        context.fillStyle = data.team || data.team === 0 ? (['red','green','blue','yellow'])[data.team] : 'grey'
         context.fillRect(0, 0, 128, 128)
         context.fillStyle = 'black'
         context.font = '24px arial'
@@ -69,87 +71,3 @@ Card.modelLoader.load(
         console.log('An error happened');
     }
 );
-
-
-
-const CardManager = function CardManager(socket, me, scene, table) {
-    
-    const deck = this;
-    this.allCards = [];
-    this.tableCards = [];
-    this.handCards = [];
-
-    this.refresh = function (cardsData) {
-        let someHasChanged = false;
-
-        // any new card has changed or has been created
-        cardsData.forEach(cardData => {
-            const index = this.allCards.findIndex(oldCard => cardData.id === oldCard.card_id);
-
-            if (index < 0) {
-
-                someHasChanged = true;
-
-                const card = new Card(socket, scene);
-                card.update(cardData, table);
-                scene.add(card);
-
-                this.allCards.push(card);
-                if (cardData.place === 'table') {
-                    this.tableCards.push(card);
-                } else if (cardData.place === 'hand') {
-                    this.handCards.push(card);
-                }
-
-
-            } else {
-                const card = this.allCards[index];
-                card.update(cardData, table);
-
-
-            }
-        });
-
-        if (someHasChanged) {
-            this.redraw();
-        }
-    }
-
-    this.redraw = function () {
-        this.tableCards.forEach ( (card,i) => card.moveTo({
-            x: table.width > table.height ?
-                ((i + 1) / (this.tableCards.length + 1) -0.5) * table.width
-                : 0,
-            y: table.width > table.height ?
-                0
-                : ((i + 1) / (this.tableCards.length + 1) - 0.5) * table.height,
-        }))
-
-        this.handCards.forEach((card, i) => card.moveTo({
-            x: table.width > table.height ?
-                ((i + 1) / (this.handCards.length + 1) -0.5) * table.width
-                : table.width / 6,
-
-            y: table.width > table.height ?
-                table.height / 6
-                : ((i + 1) / (this.handCards.length + 1) - 0.5) * table.height,
-        }))
-    };
-
-    this.intersectCards = function (raycaster) {
-        return raycaster.intersectObjects(this.allCards).map(a => a.object);
-    };
-
-    socket.on('cards_in_game', function (data) {
-        data.forEach(cardData => cardData.place = 'table');
-        deck.refresh(data);
-    });
-
-    socket.on('cards_in_hands', function (data) {
-        data.forEach(user => {
-            user.cards.forEach( cardData => cardData.place = 'hand')
-            deck.refresh(user.cards)
-        });
-    });
-
-}

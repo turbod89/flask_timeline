@@ -7,6 +7,9 @@ const CardManager = function CardManager(socket, me, scene, table) {
     this.numOfUsers = null;
     this.userSides = null;
 
+    const d = 2 * Math.min(table.width,table.height) / (5*6+8);
+    Card.geometry.scale(d,d,d);
+
     this.refresh = function (cardsData) {
         let someHasChanged = false;
 
@@ -48,7 +51,10 @@ const CardManager = function CardManager(socket, me, scene, table) {
 
         this.numOfUsers = userIndexes.length;
         this.userSides = userIndexes.reduce((o, id, i) => {
-            o[id] = ( (4 - meIndex) + i * Math.floor(4 / this.numOfUsers)) % 4;
+            o[id] = this.numOfUsers === 2 ?
+                2*(((2 - meIndex) + i ) % 2)
+                    :
+                ((4 - meIndex) + i * Math.floor(4 / this.numOfUsers)) % 4;
             return o;
         }, {});
     }
@@ -62,22 +68,26 @@ const CardManager = function CardManager(socket, me, scene, table) {
                 if (table.width > table.height) {
 
                 } else {
-                    if (side === 0) {
+                    if (side === 1) {
+                        // right
                         card.moveTo({
                             x: ( (7/8) - 0.5 ) * table.width,
                             y: ( ( 1/4 + (i+1) / (cards.length + 1) / 2 ) - 0.5 ) * table.height,
                         })
-                    } else if ( side === 1) {
+                    } else if ( side === 2) {
+                        // top
                         card.moveTo({
                             x: ((1 / 4 + (i + 1) / (cards.length + 1) / 2) - 0.5) * table.width,
                             y: ((7 / 8) - 0.5) * table.height,
                         })
-                    } else if (side === 2) {
+                    } else if (side === 3) {
+                        // left
                         card.moveTo({
                             x: ((1 / 8) - 0.5) * table.width,
                             y: ((1 / 4 + (i + 1) / (cards.length + 1) / 2) - 0.5) * table.height,
                         })
-                    } else if (side === 3) {
+                    } else if (side === 0) {
+                        // bottom
                         card.moveTo({
                             x: ((1 / 4 + (i + 1) / (cards.length + 1) / 2) - 0.5) * table.width,
                             y: ((1 / 8) - 0.5) * table.height,

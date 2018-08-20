@@ -57,7 +57,7 @@ Card.modelLoader.load(
     // onLoad callback
     function (geometry) {
         console.log('Card geometry loaded');
-        geometry.scale = new THREE.Vector3(2, 2, 2);
+        geometry.scale(2, 2, 2);
         Card.geometry = geometry;
     },
 

@@ -66,7 +66,31 @@ const CardManager = function CardManager(socket, me, scene, table) {
             const cards = this.handCards[user_id];
             cards.forEach( (card, i) => {
                 if (table.width > table.height) {
-
+                    if (side === 1) {
+                        // right
+                        card.moveTo({
+                            x: ( (7/8) - 0.5 ) * table.width,
+                            y: ( ( 1/4 + (i+1) / (cards.length + 1) / 2 ) - 0.5 ) * table.height,
+                        })
+                    } else if ( side === 2) {
+                        // top
+                        card.moveTo({
+                            x: ((1 / 4 + (i + 1) / (cards.length + 1) / 2) - 0.5) * table.width,
+                            y: ((7 / 8) - 0.5) * table.height,
+                        })
+                    } else if (side === 3) {
+                        // left
+                        card.moveTo({
+                            x: ((1 / 8) - 0.5) * table.width,
+                            y: ((1 / 4 + (i + 1) / (cards.length + 1) / 2) - 0.5) * table.height,
+                        })
+                    } else if (side === 0) {
+                        // bottom
+                        card.moveTo({
+                            x: ((1 / 4 + (i + 1) / (cards.length + 1) / 2) - 0.5) * table.width,
+                            y: ((1 / 8) - 0.5) * table.height,
+                        })
+                    }
                 } else {
                     if (side === 1) {
                         // right
